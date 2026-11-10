@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Foxglove Hollow</title>
+<meta name="description" content="A layered paper-cut forest in a shadow box, with a fox that hops and a day and night switch. Built by Claude Fable 5.2 from one prompt, in one HTML file.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+:root{--serif:"Cormorant Garamond","Iowan Old Style",Palatino,"Book Antiqua",Georgia,serif; --t:clamp(12px,3vmin,38px)}
+*{box-sizing:border-box}
+html,body{height:100%; margin:0; overflow:hidden; background:#241a13}
+body{font-family:var(--serif)}
+button{font-family:inherit}
+
+/* the wooden shadow box */
+.box{
+  position:fixed; inset:0; padding:var(--t);
+  background-color:#6b4a2e;
+  background-image:var(--wood,none),linear-gradient(135deg,#8a623d 0%,#6d4b2e 40%,#4c331f 100%);
+  box-shadow:inset 0 0 0 1px #2c1d11,inset 0 2px 0 1px rgba(255,220,170,.22),inset 0 -3px 6px rgba(0,0,0,.5);
+}
+.box::after{content:""; position:absolute; inset:0; background:rgba(9,9,32,.62); opacity:0; transition:opacity 2.4s ease; pointer-events:none}
+.box.night::after{opacity:1}
+.still *,.still *::before,.still *::after{transition:none!important}
+.box::before{ /* bevel on the inner lip */
+  content:""; position:absolute; inset:calc(var(--t) - 5px); border:5px solid; pointer-events:none;
+  border-color:#33220f #a37c50 #c39a68 #3d2915; opacity:.9;
+}
+#dio{
+  position:relative; z-index:1; width:100%; height:100%; overflow:hidden; background:#f3e8d2; touch-action:none; isolation:isolate;
+  --sky:#f3e8d2; --cloud:#fbf5e6; --hill:#d6dbba; --mtA:#b9caa9; --mtB:#9bb89b; --pineB:#7d9d75; --pine:#5f7f5b;
+  --meadow:#d9a45b; --meadow2:#c9944c; --river:#b3d0c6; --riverD:#6b958f; --rip:#dcebe2;
+  --ground:#3d6a5b; --tree:#274e52; --tree2:#3f6c5c; --treeO:#c8642d; --treeY:#d9a45b; --trunk:#3d3029; --slit:#5f7f5b;
+  --cot:#ecdcba; --roof:#b4562a; --win:#274e52; --door:#7a4a2c;
+  --mound:#2c5552; --fern:#5f7f5b; --fern2:#9bb89b; --cap:#d9a45b; --cap2:#c8642d; --stem:#f3e8d2;
+  --fg:#1b383c; --fg2:#254a4c; --flw1:#f3e8d2; --flw2:#d9a45b; --flw3:#c8642d; --bell:#c98b7b; --bell2:#e3b9a6;
+  --fox:#c8642d; --foxc:#f5ead6; --foxd:#3a2a24; --leafA:#d9a45b; --leafB:#c8642d; --leafC:#9bb89b;
+}
+#dio.night{
+  --sky:#1b2050; --cloud:#2c3168; --hill:#6370a5; --mtA:#515b93; --mtB:#434b83; --pineB:#383f78; --pine:#2b3166;
+  --meadow:#3c3a6f; --meadow2:#34325f; --river:#a9a7da; --riverD:#5c5b98; --rip:#d2d0f2;
+  --ground:#23274f; --tree:#1c2047; --tree2:#262a57; --treeO:#3a2d58; --treeY:#413a68; --trunk:#13152d; --slit:#353b70;
+  --cot:#2d305e; --roof:#1b1d40; --win:#ffd27a; --door:#17193a;
+  --mound:#171a38; --fern:#232853; --fern2:#30366a; --cap:#6a5f90; --cap2:#52466f; --stem:#8d8dbb;
+  --fg:#0e1026; --fg2:#151833; --flw1:#8688bd; --flw2:#67669a; --flw3:#55487a; --bell:#57497c; --bell2:#7a6ea6;
+  --fox:#3b2a42; --foxc:#77729e; --foxd:#0d0e1e; --leafA:#5e5a90; --leafB:#4a4078; --leafC:#6b72a8;
+}
+.layer{
+  position:absolute; display:block; pointer-events:none; will-change:transform; overflow:visible;
+  filter:drop-shadow(calc(var(--dp)*.75px) calc(var(--dp)*1px) calc(var(--dp)*.85px) rgba(58,40,20,.42));
+  transition:filter 1.7s cubic-bezier(.45,.05,.3,1) calc(var(--i)*.2s);
+}
+.night .layer{filter:drop-shadow(calc(var(--dp)*-.7px) calc(var(--dp)*1.05px) calc(var(--dp)*1.1px) rgba(5,7,28,.62))}
+.layer.flat{filter:none}
+.layer path,.layer circle,.layer rect.c,.fox path,.fox circle,.fox ellipse,.leaf path{transition:fill 1.6s cubic-bezier(.45,.05,.3,1) calc(var(--i)*.2s),stroke 1.6s cubic-bezier(.45,.05,.3,1) calc(var(--i)*.2s)}
+.rim{transform:translate(-1.5px,-1.7px); filter:brightness(1.2) saturate(.92); transition:transform 1.7s ease calc(var(--i)*.2s),filter 1.7s ease calc(var(--i)*.2s)}
+.night .rim{transform:translate(1.6px,-1.7px); filter:brightness(1.95) saturate(.75)}
+.grain{pointer-events:none; transition:opacity 2s ease}
+.night .grain{opacity:.5}
+.sway{transform-origin:50% 100%; animation:sway 7s ease-in-out infinite alternate}
+@keyframes sway{from{transform:skewX(-.5deg)}to{transform:skewX(.6deg)}}
+
+/* sky furniture */
+.sun,.sunglow{transition:opacity 1.6s ease,transform 2.4s cubic-bezier(.5,0,.3,1)}
+.night .sun,.night .sunglow{opacity:0; transform:translateY(22%)}
+.moon{opacity:0; transform:translateY(26%); transition:opacity 1.8s ease .3s,transform 2.6s cubic-bezier(.2,.7,.2,1) .2s}
+.night .moon{opacity:1; transform:none}
+.nightsky{opacity:0; transition:opacity 2s ease}
+.night .nightsky{opacity:1}
+.star{opacity:0; transition:opacity 1.2s ease calc(var(--s)*1s)}
+.night .star{opacity:var(--o); animation:twinkle var(--tw) ease-in-out calc(var(--s)*-3s) infinite alternate}
+@keyframes twinkle{from{opacity:var(--o)}to{opacity:calc(var(--o)*.3)}}
+.winglow{opacity:0; transition:opacity 1.4s ease 1.5s}
+.night .winglow{opacity:1; animation:hearth 4.6s ease-in-out 3s infinite alternate}
+@keyframes hearth{0%{opacity:1}40%{opacity:.82}70%{opacity:.96}100%{opacity:.86}}
+.haze{position:absolute; left:-5%; right:-5%; pointer-events:none; transition:opacity 2.2s ease .5s,background 2.2s ease .5s; will-change:transform}
+.shafts{position:absolute; inset:-10%; pointer-events:none; mix-blend-mode:soft-light; transition:opacity 2s ease;
+  background:linear-gradient(118deg,rgba(255,240,200,0) 8%,rgba(255,240,200,.55) 15%,rgba(255,240,200,0) 23%,rgba(255,240,200,0) 30%,rgba(255,240,200,.4) 37%,rgba(255,240,200,0) 47%,rgba(255,240,200,0) 55%,rgba(255,240,200,.22) 61%,rgba(255,240,200,0) 68%)}
+.night .shafts{opacity:0}
+.moonwash{position:absolute; inset:0; pointer-events:none; opacity:0; transition:opacity 2.4s ease 1s; mix-blend-mode:screen;
+  background:radial-gradient(70% 60% at var(--mx,75%) var(--my,18%),rgba(150,160,255,.24),rgba(150,160,255,0) 70%)}
+.night .moonwash{opacity:1}
+.depth{position:absolute; inset:0; pointer-events:none; transition:box-shadow 2s ease;
+  box-shadow:inset 20px 22px 30px -10px rgba(46,28,10,.6),inset 0 0 60px rgba(46,28,10,.22)}
+.night .depth{box-shadow:inset -20px 22px 34px -10px rgba(2,3,18,.75),inset 0 0 80px rgba(2,3,18,.45)}
+
+/* drifting leaves, motes and fireflies */
+.leaf{position:absolute; left:0; top:0; pointer-events:none; will-change:transform; animation:drift var(--T) linear var(--dl) infinite; filter:drop-shadow(2px 3px 2px rgba(40,26,10,.28))}
+.leaf i{display:block; animation:flutter var(--t2) ease-in-out var(--dl) infinite alternate}
+.leaf svg{display:block}
+@keyframes drift{from{transform:translate3d(var(--x0),var(--y0),0)}to{transform:translate3d(var(--x1),var(--y1),0)}}
+@keyframes flutter{from{transform:translateY(-16px) rotate(-55deg) rotateX(15deg)}to{transform:translateY(16px) rotate(75deg) rotateX(62deg)}}
+.motes,.flies{position:absolute; inset:0; pointer-events:none; transition:opacity 2s ease}
+.night .motes{opacity:0}
+.flies{opacity:0}
+.night .flies{opacity:1; transition-delay:1.6s}
+.mote{position:absolute; width:3px; height:3px; border-radius:50%; background:rgba(255,246,214,.85); box-shadow:0 0 5px 1px rgba(255,240,200,.5); animation:moteA var(--T) ease-in-out var(--dl) infinite alternate}
+@keyframes moteA{from{transform:translate3d(0,0,0); opacity:.1}50%{opacity:.8}to{transform:translate3d(var(--dx),var(--dy),0); opacity:.15}}
+.fly{position:absolute; animation:flyA var(--T) ease-in-out var(--dl) infinite alternate}
+.fly i{display:block; animation:flyB var(--t2) ease-in-out var(--dl) infinite alternate}
+.fly b{display:block; width:var(--z); height:var(--z); border-radius:50%; background:radial-gradient(circle,#fff7c8 0%,#ffd76a 34%,rgba(255,200,80,0) 70%);
+  box-shadow:0 0 calc(var(--z)*1.2) calc(var(--z)*.35) rgba(255,214,110,.4); animation:glow var(--t3) ease-in-out var(--dl) infinite}
+@keyframes flyA{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--dx),0,0)}}
+@keyframes flyB{from{transform:translate3d(0,0,0)}to{transform:translate3d(0,var(--dy),0)}}
+@keyframes glow{0%,100%{opacity:.1; transform:scale(.6)}18%{opacity:1; transform:scale(1)}42%{opacity:.55}60%{opacity:.95}80%{opacity:.2; transform:scale(.7)}}
+
+/* the fox */
+.fox{position:absolute; left:0; top:0; padding:0; border:0; background:none; cursor:pointer; will-change:transform; -webkit-tap-highlight-color:transparent; --i:8; outline:none;
+  filter:drop-shadow(5px 7px 5px rgba(58,40,20,.42)); transition:filter 1.7s ease 1.5s}
+.night .fox{filter:drop-shadow(-5px 7px 6px rgba(5,7,28,.6))}
+.fox svg{display:block; width:100%; height:100%; overflow:visible; transform-origin:47% 94%}
+.fox:focus-visible::after{content:""; position:absolute; inset:-8px; border:2px dashed #f5ead6; border-radius:50%}
+.fox .head,.fox .tailI,.fox .eye{transform-box:view-box}
+.fox .head{transform-origin:84px 60px}
+.fox .head.tilt{animation:tilt 1.9s ease-in-out}
+@keyframes tilt{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-11deg)}}
+.fox .tailI{transform-origin:48px 96px}
+.fox .tailI.swish{animation:swish 1.5s ease-in-out}
+@keyframes swish{0%,100%{transform:rotate(0)}25%{transform:rotate(9deg)}60%{transform:rotate(-7deg)}82%{transform:rotate(3deg)}}
+.fox .eye{transform-origin:97px 43px}
+.fox .eye.blink{animation:blink .32s ease-in-out}
+@keyframes blink{0%,100%{transform:scaleY(1)}45%,55%{transform:scaleY(.1)}}
+
+/* title tag on its string */
+.tagw{position:absolute; top:0; left:var(--tagx,24%); transform-origin:50% 0; pointer-events:none; will-change:transform; z-index:5}
+.string{width:1.5px; height:var(--sl,64px); margin:0 auto; background:linear-gradient(90deg,#8d7a5c,#d9c9a6 50%,#7b684b)}
+.tag{
+  position:relative; margin-top:-9px; padding:1.25em 1.5em .8em; transform:rotate(-2.2deg) translateX(-2%);
+  background-color:#f1e4c8; background-image:var(--tagpaper,none),radial-gradient(120% 100% at 30% 20%,#fbf1da,#e8d7b3);
+  clip-path:polygon(13% 1%,50% 0,87% 1.6%,99% 16%,99.4% 52%,98.6% 97%,62% 99.4%,30% 98.6%,1.4% 99%,.6% 55%,1% 17%);
+}
+.tagwrap{filter:drop-shadow(4px 6px 4px rgba(50,32,12,.42)); transition:filter 1.8s ease}
+.night .tagwrap{filter:drop-shadow(-4px 6px 5px rgba(3,4,20,.6)) brightness(.6) saturate(.6) hue-rotate(190deg)}
+.tag::before{content:""; position:absolute; left:50%; top:6px; width:9px; height:9px; margin-left:-4.5px; border-radius:50%; background:#3a3020; box-shadow:inset 1px 1.5px 2px rgba(0,0,0,.7),0 0 0 1.5px rgba(160,130,84,.55)}
+.tag h1{margin:0; font-weight:600; font-size:clamp(1.25rem,3.6vmin,2.2rem); letter-spacing:.02em; line-height:1; color:#4a3320; white-space:nowrap}
+.tag p{margin:.35em 0 0; font-style:italic; font-size:clamp(.72rem,1.7vmin,.95rem); color:#7a5a3a; text-align:center; letter-spacing:.04em}
+
+/* the paper day and night switch, and the prompt tag */
+.switch{
+  position:absolute; right:clamp(10px,2.4vmin,26px); bottom:clamp(10px,2.4vmin,26px); z-index:6; width:86px; height:40px; padding:0; cursor:pointer;
+  border:0; border-radius:22px; background-color:#7a5636; background-image:var(--wood,none),linear-gradient(180deg,#6a4a2d,#94704a);
+  box-shadow:inset 0 3px 6px rgba(0,0,0,.6),inset 0 -1px 0 rgba(255,225,180,.3),0 3px 8px rgba(0,0,0,.35);
+}
+.switch svg{position:absolute; top:10px; width:20px; height:20px; opacity:.6; transition:opacity .8s}
+.switch .isun{left:10px} .switch .imoon{right:10px}
+.switch .knob{position:absolute; left:5px; top:5px; width:30px; height:30px; border-radius:50%; transition:transform .9s cubic-bezier(.5,1.5,.4,1),background-color 1.2s;
+  background-color:#f4e4c1; background-image:var(--tagpaper,none); box-shadow:2px 3px 4px rgba(0,0,0,.5),inset -2px -2px 3px rgba(150,110,60,.35),inset 1px 1px 1px rgba(255,255,255,.7)}
+.switch[aria-checked="true"] .knob{transform:translateX(46px); background-color:#cfd2ee}
+.switch:focus-visible,.ptag:focus-visible{outline:2px solid #f5ead6; outline-offset:3px}
+.switch:hover .knob{filter:brightness(1.05)}
+.ptag{
+  position:absolute; left:clamp(10px,2.4vmin,26px); bottom:clamp(10px,2.4vmin,26px); z-index:6; cursor:pointer; border:0; padding:.5em 1em .45em 1.5em;
+  font-style:italic; font-size:clamp(.82rem,1.9vmin,1rem); color:#4a3320; background-color:#f1e4c8; background-image:var(--tagpaper,none);
+  clip-path:polygon(0 50%,9% 2%,99% 0,100% 98%,9% 100%); filter:drop-shadow(2px 3px 2px rgba(0,0,0,.35)); transition:transform .3s,filter 1.8s;
+}
+.ptag:hover{transform:rotate(-2deg) translateY(-1px)}
+.night ~ .ptag{filter:drop-shadow(2px 3px 3px rgba(0,0,0,.5)) brightness(.72)}
+.credit{position:absolute; left:50%; bottom:calc(var(--t)*.5 - .55em); transform:translateX(-50%); z-index:7; margin:0; font-size:clamp(.6rem,1.5vmin,.8rem); letter-spacing:.14em; color:rgba(250,232,200,.62); white-space:nowrap; pointer-events:none; text-shadow:0 1px 1px rgba(0,0,0,.5)}
+
+/* the prompt page */
+.brief{position:fixed; inset:0; z-index:40; display:grid; place-items:start center; overflow:auto; padding:5vh 14px; background:rgba(26,17,10,.86); opacity:0; visibility:hidden; transition:opacity .4s,visibility 0s .4s}
+.brief.on{opacity:1; visibility:visible; transition:opacity .4s}
+.page{max-width:740px; width:100%; padding:clamp(22px,5vw,56px); color:#3d2c1c; font-size:1.12rem; line-height:1.55;
+  background-color:#f3e8d2; background-image:var(--tagpaper,none),radial-gradient(130% 90% at 50% 30%,#fbf3de,#e9d9b8); box-shadow:0 30px 60px rgba(0,0,0,.6)}
+.page h2{margin:0; font-weight:600; font-size:1.9rem}
+.page .by{font-style:italic; margin:.2em 0 1.3em; padding-bottom:1em; border-bottom:1px solid rgba(74,51,32,.35); color:#7a5a3a}
+.page code{font-family:"Courier New",monospace; font-size:.82em; background:rgba(74,51,32,.1); padding:0 .25em}
+.page button{float:right; margin:0 0 10px 14px; cursor:pointer; border:1px solid rgba(74,51,32,.5); background:#e8d7b3; color:#3d2c1c; font-size:1rem; font-style:italic; padding:.3em 1em}
+.page button:focus-visible{outline:2px solid #4a3320; outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){
+  .leaf,.mote,.sway,.fly,.fly i,.night .star{animation:none!important}
+  .leaf,.motes{display:none}
+  .fly b{animation-duration:9s!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+  <pattern id="grainA" width="300" height="300" patternUnits="userSpaceOnUse"><image id="grainImgA" width="300" height="300"/></pattern>
+  <pattern id="grainB" width="300" height="300" patternUnits="userSpaceOnUse" patternTransform="rotate(37) scale(1.25)"><image id="grainImgB" width="300" height="300"/></pattern>
+  <radialGradient id="sunG"><stop offset="0" stop-color="#fff8e0" stop-opacity=".95"/><stop offset=".35" stop-color="#fbe6b4" stop-opacity=".55"/><stop offset="1" stop-color="#f6d9a0" stop-opacity="0"/></radialGradient>
+  <radialGradient id="moonG"><stop offset="0" stop-color="#e9ecff" stop-opacity=".6"/><stop offset=".4" stop-color="#b9bff5" stop-opacity=".22"/><stop offset="1" stop-color="#9aa0e8" stop-opacity="0"/></radialGradient>
+  <radialGradient id="winG"><stop offset="0" stop-color="#ffd98a" stop-opacity=".9"/><stop offset=".4" stop-color="#ffb85a" stop-opacity=".35"/><stop offset="1" stop-color="#ff9c40" stop-opacity="0"/></radialGradient>
+  <linearGradient id="duskG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#141842" stop-opacity=".75"/><stop offset=".55" stop-color="#2b2a66" stop-opacity="0"/><stop offset="1" stop-color="#7b62a8" stop-opacity=".7"/></linearGradient>
+</defs></svg>
+
+<div class="box" id="box">
+  <div id="dio" role="img" aria-label="A paper-cut forest diorama with hills, pines, a river, a cottage and a small fox">
+  </div>
+  <button class="ptag" id="briefBtn" type="button">the prompt</button>
+  <button class="switch" id="sw" type="button" role="switch" aria-checked="false" aria-label="Night">
+    <svg class="isun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="4.2" fill="#f6dc9c"/><path d="M10 .8v3M10 16.2v3M.8 10h3M16.2 10h3M3.5 3.5l2.1 2.1M14.4 14.4l2.1 2.1M3.5 16.5l2.1-2.1M14.4 5.6l2.1-2.1" stroke="#f6dc9c" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <svg class="imoon" viewBox="0 0 20 20" aria-hidden="true"><path d="M14.5 13.6A7 7 0 0 1 8.2 2.3a7.6 7.6 0 1 0 8.6 9.6 6.6 6.6 0 0 1-2.3 1.7z" fill="#dfe2ff"/></svg>
+    <span class="knob"></span>
+  </button>
+  <p class="credit">CUT FROM ONE PROMPT BY CLAUDE FABLE 5.2</p>
+</div>
+
+<div class="brief" id="brief" role="dialog" aria-modal="true" aria-label="The prompt" aria-hidden="true">
+  <div class="page">
+    <button id="briefClose" type="button">Close</button>
+    <h2>The prompt</h2>
+    <p class="by">Given to Claude Fable 5.2 as written. This page is the result.</p>
+    <div id="briefBody"></div>
+  </div>
+</div>
+
+<script type="text/plain" id="promptSrc">
+Design and build **"Foxglove Hollow — An Enchanted Paper Forest"**, an immersive, interactive, layered paper-cut forest diorama that feels like a handcrafted storybook brought to life. The entire experience should resemble an intricate shadow-box artwork made from individually cut sheets of textured colored paper, with delicate imperfections, soft lighting, natural movement, and convincing physical depth.
+
+**Visual composition:** Create a richly detailed woodland scene using **seven to nine stacked layers of hand-cut-looking paper**, constructed primarily from SVG paths with slightly irregular, organic edges. Each layer should have its own silhouette, color, position, and subtle paper texture. Arrange the layers from back to front: a soft atmospheric sky, distant rolling hills, overlapping mountain ridges, tall pine forests, a winding river, woodland trees, clusters of mushrooms and ferns, a small burnt-orange fox, and foreground grasses with delicate leaves and wildflowers. Every layer must cast a soft, realistic drop shadow onto the paper immediately behind it, creating the illusion of a miniature physical diorama assembled inside a deep wooden shadow box.
+
+**Paper craftsmanship:** Make every element feel genuinely handmade rather than digitally flat. Introduce subtle asymmetry, gently uneven cut edges, tiny paper fibers, slight variations in thickness, delicate curled corners, and soft ambient occlusion between overlapping layers. Use procedural SVG noise filters to simulate fine paper grain without overwhelming the illustration. Shadows should vary naturally depending on layer depth and lighting direction. Avoid perfectly geometric shapes, overly smooth vector artwork, glossy gradients, or plastic-looking surfaces. The final result should feel like a premium handcrafted paper sculpture photographed under soft studio lighting.
+
+**Daytime palette:** Use a warm, harmonious woodland color scheme featuring sage green `#9bb89b`, moss green `#5f7f5b`, deep teal `#274e52`, ochre `#d9a45b`, burnt orange `#c8642d`, and a soft cream sky `#f3e8d2`. The sky should glow gently with warm sunlight, while the layered trees and hills become progressively darker toward the foreground. Add small visual details such as golden mushrooms, delicate ferns, tiny wildflowers, and scattered paper leaves. Keep the colors muted, earthy, and sophisticated, resembling an illustrated vintage children's storybook.
+
+**Nighttime transformation:** Include a beautifully animated **Day / Night** toggle that transforms the entire diorama into an enchanted moonlit forest. Every paper layer should transition smoothly into a coordinated palette of midnight indigo, dusty blue, deep violet, muted lavender, and cool charcoal. A softly glowing paper moon should appear in the sky, accompanied by tiny cut-paper stars, subtle atmospheric haze, and gently pulsing fireflies. Add a few warm glowing windows in a tiny distant woodland cottage nestled among the trees. The moonlight should softly illuminate the edges of the paper layers, while the fox and foreground vegetation become darker silhouettes. Use staggered color transitions so the transformation travels naturally through the scene from the distant sky toward the foreground, rather than changing everything simultaneously.
+
+**Interactive parallax:** Make the layered forest respond continuously to mouse movement, creating a subtle but convincing three-dimensional parallax effect. Distant hills should move very little, middle-ground trees should move moderately, and foreground grasses and branches should shift more noticeably. On touchscreen devices, users should be able to drag gently across the scene to explore the depth. Keep the movement smooth, restrained, and physically believable, as if looking into a real paper shadow box from slightly different angles. Preserve proper overlap between all layers and prevent visible gaps at the edges during movement.
+
+**Fox interaction:** Place a small, charming burnt-orange paper fox within the middle-ground forest clearing. Give it a recognizable silhouette with pointed ears, a fluffy tail, tiny paws, and subtle cream-colored details. When users click or tap the fox, animate a playful little hop to a different nearby position. The fox should crouch slightly, spring upward, travel along a gentle arc, and land with a soft bounce. Its tail should follow the movement naturally, with a slight delayed sway. Occasionally allow the fox to blink, tilt its head, or gently move its tail while idle. Keep the animation whimsical and subtle, preserving the handcrafted paper-cut aesthetic.
+
+**Ambient animation:** Introduce gentle environmental movement that makes the diorama feel alive without becoming distracting. Small paper leaves should drift slowly through the scene, rotating and floating at different depths. Delicate foreground grasses may sway almost imperceptibly. In daytime, occasional dust motes can drift through shafts of warm light. At night, fireflies should appear at different depths, floating slowly with soft, irregular glows. All movements should feel calm, organic, and storybook-like, with varied timing to avoid repetitive mechanical loops.
+
+**Lighting and shadows:** Use soft directional lighting to emphasize the physical separation between paper layers. During daytime, simulate warm sunlight entering from the upper-left corner, casting delicate shadows behind the trees, hills, and foreground objects. At night, shift the illumination toward cool moonlight, with subtle rim lighting on the paper silhouettes and warm localized glows around the cottage windows and fireflies. Shadows should respond appropriately to the selected lighting mode while maintaining the illusion of real stacked paper.
+
+**Title and typography:** Display the title **"Foxglove Hollow"** on a small textured paper tag suspended from a thin string near the upper portion of the composition. The tag should look physically attached to the diorama, with a tiny punched hole, slightly irregular paper edges, and a delicate drop shadow. Use an elegant, warm serif typeface with a literary storybook quality. Allow the tag to sway very gently when the pointer moves, as though suspended in the miniature scene. Keep the typography refined, understated, and integrated into the artwork rather than presenting it as a conventional website heading.
+
+**Interface design:** Keep the interface minimal and visually integrated with the handcrafted environment. The Day / Night toggle should resemble a small paper switch, wooden slider, or illustrated sun-and-moon control positioned discreetly near the edge of the diorama. Avoid modern dashboard elements, bright buttons, excessive labels, or floating UI panels. The primary focus should always remain on the forest artwork. All interactive elements must provide clear visual feedback and work smoothly with mouse, touch, and keyboard accessibility where appropriate.
+
+**Responsive composition:** Design the entire scene to adapt beautifully to desktop, tablet, and portrait mobile screens. On wide displays, emphasize the sweeping forest landscape and horizontal layering. On portrait screens, recompute the SVG composition and layer positions to create a taller, more intimate woodland scene rather than simply cropping or shrinking the desktop layout. Preserve the fox, river, moon, title tag, and essential foreground details within the visible area. Maintain the paper depth, natural proportions, shadow relationships, and parallax behavior across all viewport sizes.
+
+**Animation and performance:** Use lightweight SVG, CSS transforms, procedural filters, and carefully optimized animations to maintain smooth performance. Prefer transform-based movement and avoid unnecessary full-scene redraws. Support reduced-motion preferences by minimizing parallax and decorative animation while preserving essential interactions. Ensure that changing between day and night does not reset the fox's position or interrupt unrelated interactions.
+
+**Overall experience:** Make **"Foxglove Hollow"** feel like a magical, handcrafted woodland world discovered inside an antique illustrated storybook. The experience should be peaceful, nostalgic, tactile, and quietly enchanting — an interactive miniature forest where every layer has depth, every shadow reveals the craftsmanship, and every subtle movement brings the paper artwork to life. Prioritize exceptional visual polish, authentic paper textures, beautiful color harmony, responsive parallax, delightful fox interactions, and seamless day-to-night transformation. The finished result should feel less like a conventional website and more like a living piece of handcrafted art.
+</script>
+
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s),dio=$('#dio'),box=$('#box');
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const rng=seed=>{let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}};
+const f=n=>(Math.round(n*10)/10).toString(),P2=(x,y)=>f(x)+','+f(y);
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- procedural textures ---------- */
+const svgUrl=s=>`url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+document.documentElement.style.setProperty('--wood',svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='700' height='700'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.006 .16' numOctaves='3' seed='5' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .12 0 0 0 0 .06 0 0 0 0 .02 0 0 0 1.5 -.5'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`));
+document.documentElement.style.setProperty('--tagpaper',svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .4 0 0 0 0 .28 0 0 0 0 .14 0 0 0 .55 -.16'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`));
+/* paper grain tile with speckle and loose fibres, shared by every layer through an SVG pattern */
+(()=>{const c=document.createElement('canvas'),R=rng(99);c.width=c.height=300;const g=c.getContext('2d'),im=g.createImageData(300,300),d=im.data;
+  for(let i=0;i<90000;i++){const dark=R()<.52,a=Math.pow(R(),2.4);d[i*4]=d[i*4+1]=d[i*4+2]=dark?28:255;d[i*4+3]=a*(dark?58:44)}
+  g.putImageData(im,0,0);g.lineWidth=.7;g.lineCap='round';
+  for(let i=0;i<190;i++){const x=R()*300,y=R()*300,a=R()*6.28,l=5+R()*20,b=a+(R()-.5)*1.6;
+    g.strokeStyle=R()<.55?`rgba(255,252,240,${.1+R()*.16})`:`rgba(50,36,20,${.05+R()*.1})`;
+    g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+Math.cos(a)*l*.5,y+Math.sin(a)*l*.5,x+Math.cos(b)*l,y+Math.sin(b)*l);g.stroke()}
+  const u=c.toDataURL();$('#grainImgA').setAttribute('href',u);$('#grainImgB').setAttribute('href',u)})();
+
+/* ---------- path helpers ---------- */
+const sp=p=>{let d='';for(let i=0;i<p.length-1;i++){const a=p[i-1]||p[i],b=p[i],c=p[i+1],e=p[i+2]||c;
+  d+=`C${P2(b[0]+(c[0]-a[0])/6,b[1]+(c[1]-a[1])/6)} ${P2(c[0]-(e[0]-b[0])/6,c[1]-(e[1]-b[1])/6)} ${P2(c[0],c[1])}`}return d};
+const spc=p=>{const n=p.length;let d=`M${P2(p[0][0],p[0][1])}`;for(let i=0;i<n;i++){const a=p[(i-1+n)%n],b=p[i],c=p[(i+1)%n],e=p[(i+2)%n];
+  d+=`C${P2(b[0]+(c[0]-a[0])/6,b[1]+(c[1]-a[1])/6)} ${P2(c[0]-(e[0]-b[0])/6,c[1]-(e[1]-b[1])/6)} ${P2(c[0],c[1])}`}return d+'Z'};
+const poly=p=>'M'+p.map(q=>P2(q[0],q[1])).join('L')+'Z';
+
+/* ---------- scene state ---------- */
+let W=0,H=0,U=0,PT=false,MX=0,MY=0,OX=0,OY=0,layers=[],moundPts=[],foxEl=null,foxSpot=1,spots=[];
+let night=/night/.test(location.hash);
+if(/still/.test(location.hash))document.documentElement.classList.add('still');
+
+function build(){
+  const R=rng(7310),J=(v,a)=>v+(R()-.5)*2*a,rr=(a,b)=>a+(b-a)*R(),pk=a=>a[(R()*a.length)|0];
+  W=dio.clientWidth;H=dio.clientHeight;U=Math.min(W,H);PT=H>W*1.08;
+  MX=reduce?2:Math.max(10,Math.min(W*.026,32));MY=MX*.45;OX=Math.ceil(MX+16);OY=Math.ceil(MY+12);
+  const L=-OX-12,RT=W+OX+12,B=H+OY+12,TP=-OY-12;
+  dio.querySelectorAll('.layer,.haze,.leaf,.motes,.flies,.shafts,.moonwash,.depth,.tagw').forEach(e=>e.remove());
+  layers=[];let idx=0;
+  const Y=PT?{hill:.37,mtA:.42,mtB:.47,pine:.56,meadow:.6,trees:.79,mound:.885}:{hill:.37,mtA:.42,mtB:.48,pine:.56,meadow:.58,trees:.81,mound:.89};
+
+  /* a layer is one sheet of paper: lit rim, the shapes, grain, then anything that glows */
+  function sheet(par,dp,body,extra='',o={}){
+    const i=idx++,el=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    el.setAttribute('class','layer'+(o.flat?' flat':'')+(o.sway?' sway':''));el.setAttribute('viewBox',`${-OX} ${-OY} ${W+2*OX} ${H+2*OY}`);
+    el.style.cssText=`left:${-OX}px;top:${-OY}px;width:${W+2*OX}px;height:${H+2*OY}px;--i:${i};--dp:${dp}`;
+    el.innerHTML=`<defs><mask id="mk${i}" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="${L}" y="${TP}" width="${RT-L}" height="${B-TP}"><use href="#sh${i}"/></mask></defs>${o.flat?'':`<g class="rim"><use href="#sh${i}"/></g>`}<g id="sh${i}">${body}</g><rect class="grain" x="${L}" y="${TP}" width="${RT-L}" height="${B-TP}" fill="url(#grain${i%2?'B':'A'})" mask="url(#mk${i})"/>${extra}`;
+    dio.appendChild(el);layers.push({el,par});return el;
+  }
+  const C=(cls,d)=>d?`<path class="c-${cls}" d="${d}"/>`:'';
+  const ridge=(y,amp,step,rough,k=[1,2.3,4.1])=>{const ph=k.map(()=>R()*6.28),pts=[];
+    for(let x=L;x<=RT+step;x+=step){let yy=y;k.forEach((q,i)=>yy+=Math.sin(x/W*q*3.1*(PT?.62:1)+ph[i])*amp/(i+1));pts.push([x,J(yy,rough)])}return pts};
+  const land=pts=>`M${P2(pts[0][0],pts[0][1])}${sp(pts)}L${P2(RT,B)}L${P2(L,B)}Z`;
+  const yAt=(pts,x)=>{for(let i=1;i<pts.length;i++)if(pts[i][0]>=x){const a=pts[i-1],b=pts[i],t=(x-a[0])/(b[0]-a[0]);return a[1]+(b[1]-a[1])*t}return pts[pts.length-1][1]};
+
+  /* 1. sky */
+  {
+    const sx=W*(PT?.2:.15),sy=H*(PT?.12:.17),sr=U*.075,mx=W*(PT?.74:.78),my=H*(PT?.14:.2),mr=U*(PT?.085:.075);
+    dio.style.setProperty('--mx',(mx/W*100).toFixed(0)+'%');dio.style.setProperty('--my',(my/H*100).toFixed(0)+'%');
+    let stars='',clouds='';
+    for(let i=0;i<(PT?26:34);i++){const x=rr(0,W),y=rr(0,H*Y.hill*.92),s=rr(1.6,4.4)*(U/700+.5),o=rr(.55,1);
+      if(Math.hypot(x-mx,y-my)<mr*1.7)continue;
+      stars+=`<path class="star" style="--o:${o.toFixed(2)};--s:${R().toFixed(2)};--tw:${rr(1.8,4.6).toFixed(1)}s" fill="#f7f1d6" d="M${P2(x,y-s)}L${P2(x+s*.28,y-s*.26)}L${P2(x+s*J(1,.1),y)}L${P2(x+s*.26,y+s*.28)}L${P2(x,y+s*J(1,.12))}L${P2(x-s*.28,y+s*.26)}L${P2(x-s,y)}L${P2(x-s*.26,y-s*.28)}Z"/>`}
+    const cloud=(x,y,w)=>{const h=w*.2,p=[[x-w/2,y],[x-w*.38,y-h*.55],[x-w*.2,y-h*.6],[x-w*.08,y-h*J(1.05,.1)],[x+w*.1,y-h*.75],[x+w*.24,y-h*.9],[x+w*.4,y-h*.4],[x+w/2,y],[x+w*.2,y+h*.14],[x-w*.25,y+h*.12]];return spc(p.map(q=>[J(q[0],1.2),J(q[1],1)]))};
+    (PT?[[.62,.27,.34],[.2,.31,.26]]:[[.4,.2,.17],[.6,.31,.12],[.9,.36,.13]]).forEach(c=>clouds+=cloud(W*c[0],H*c[1],W*c[2]));
+    const cr=[[-.3,-.25,.2],[.25,.1,.26],[-.1,.42,.13],[.42,-.38,.1]].map(c=>`<circle cx="${f(mx+c[0]*mr)}" cy="${f(my+c[1]*mr)}" r="${f(c[2]*mr)}" fill="#ddd6ba"/>`).join('');
+    sheet(.03,0,`<rect class="c c-sky" x="${L}" y="${TP}" width="${RT-L}" height="${B-TP}"/>`,
+      `<rect class="nightsky" x="${L}" y="${TP}" width="${RT-L}" height="${H*Y.pine-TP}" fill="url(#duskG)"/>
+       <circle class="sunglow" cx="${f(sx)}" cy="${f(sy)}" r="${f(Math.max(W,H)*.62)}" fill="url(#sunG)" style="transform-box:fill-box"/>
+       <g class="sun" style="transform-box:fill-box"><circle cx="${f(sx+2.5)}" cy="${f(sy+3)}" r="${f(sr)}" fill="rgba(170,120,50,.22)"/><circle cx="${f(sx)}" cy="${f(sy)}" r="${f(sr)}" fill="#fdf5dd"/><circle cx="${f(sx)}" cy="${f(sy)}" r="${f(sr*.72)}" fill="#fbecc2" opacity=".7"/></g>
+       ${stars}
+       <g class="moon" style="transform-box:fill-box"><circle cx="${f(mx)}" cy="${f(my)}" r="${f(mr*4.2)}" fill="url(#moonG)"/><circle cx="${f(mx-3)}" cy="${f(my+4)}" r="${f(mr)}" fill="rgba(4,6,30,.5)"/><circle cx="${f(mx)}" cy="${f(my)}" r="${f(mr)}" fill="#f4eed6"/>${cr}<rect x="${f(mx-mr)}" y="${f(my-mr)}" width="${f(mr*2)}" height="${f(mr*2)}" fill="url(#grainB)" style="clip-path:circle(50%)"/></g>
+       <path class="c-cloud" style="filter:drop-shadow(2px 3px 2px rgba(60,40,20,.22))" d="${clouds}"/>`,{flat:true});
+  }
+  /* 2. distant rolling hills */
+  sheet(.1,3,C('hill',land(ridge(H*Y.hill,H*.035,W/22,.8))));
+  /* 3 and 4. overlapping mountain ridges, cut in straight facets */
+  const peaks=(y,amp,n)=>{const pts=[[L,J(y,amp*.2)]];let x=L,up=R()<.5;
+    while(x<RT){const stp=W/n*rr(.32,.68);x+=stp;const yy=up?y-amp*rr(.55,1):y+amp*rr(-.05,.22);
+      pts.push([x-stp*rr(.35,.6),J((pts[pts.length-1][1]+yy)/2,amp*.09)],[x,yy]);up=!up}
+    return'M'+pts.map(q=>P2(q[0],q[1])).join('L')+`L${P2(RT,B)}L${P2(L,B)}Z`};
+  sheet(.17,4,C('mtA',peaks(H*Y.mtA,H*(PT?.11:.17),PT?3.2:5)));
+  sheet(.25,5,C('mtB',peaks(H*Y.mtB,H*(PT?.09:.13),PT?3.6:6)));
+  /* haze between the ridges and the pines */
+  {const hz=document.createElement('div');hz.className='haze';hz.style.cssText=`top:${H*(Y.mtB-.1)}px;height:${H*(Y.meadow-Y.mtB+.16)}px`;dio.appendChild(hz);layers.push({el:hz,par:.3})}
+  /* 5. pine forest on its ridge */
+  const pine=(x,yb,h)=>{const w=h*J(.21,.03),n=4+(R()*3|0),r=[],l=[],tw=h*.028;
+    for(let i=1;i<=n;i++){const t=i/n,yy=yb-h+h*.92*t,ww=w*Math.pow(t,.85);
+      r.push([x+ww*J(1,.13),J(yy,h*.012)]);l.push([x-ww*J(1,.13),J(yy,h*.012)]);
+      if(i<n){r.push([x+ww*J(.52,.08),J(yy-h*.022,h*.008)]);l.push([x-ww*J(.52,.08),J(yy-h*.022,h*.008)])}}
+    return poly([[J(x,h*.012),yb-h],...r,[x+tw,yb-h*.075],[x+tw,yb+8],[x-tw,yb+8],[x-tw,yb-h*.075],...l.reverse()])};
+  {
+    const rg=ridge(H*Y.pine,H*.02,W/16,1,[1,2.7]);let back='',front='';
+    for(let x=L+10;x<RT;x+=W*(PT?.085:.043)*rr(.75,1.3))back+=pine(x,yAt(rg,x)+4,H*(PT?.14:.19)*rr(.72,1.12));
+    for(let x=L+20;x<RT;x+=W*(PT?.13:.062)*rr(.7,1.35)){const c=Math.abs(x/W-.56);front+=pine(x,yAt(rg,x)+6,H*(PT?.19:.27)*rr(.74,1.08)*(c<.16?.7:1))}
+    sheet(.36,6,C('pineB',back)+C('pine',land(rg))+C('pine',front));
+  }
+  /* 6. meadow and the winding river */
+  let riverMid=[];
+  {
+    const rg=ridge(H*Y.meadow,H*.012,W/14,.8,[1,2.1]),y0=H*Y.meadow,l=[],r=[],n=26;
+    const x0=W*(PT?.6:.62),amp=W*(PT?.3:.2);
+    for(let i=0;i<=n;i++){const t=i/n,y=y0+2+(H*Y.mound+H*.04-y0)*Math.pow(t,1.1);
+      const x=x0+Math.sin(t*(PT?5.6:5)+.4)*amp*(.25+t*.85)-t*W*(PT?.12:.14),w=3+W*(PT?.24:.115)*Math.pow(t,1.45);
+      riverMid.push([x,y,w]);l.push([J(x-w/2,.9),y]);r.push([J(x+w/2,.9),y])}
+    const riv=`M${P2(l[0][0],l[0][1])}${sp(l)}L${P2(r[n][0],r[n][1])}${sp(r.slice().reverse())}Z`;
+    let rip='',strip='';
+    for(let i=7;i<n-1;i+=2){const m=riverMid[i],w=m[2]*rr(.12,.3),x=m[0]+m[2]*rr(-.25,.25),y=m[1]+rr(-3,3),h=Math.max(1.6,m[2]*.028);
+      rip+=`M${P2(x-w,y)}Q${P2(x,y-h*1.6)} ${P2(x+w,y)}Q${P2(x,y-h*.2)} ${P2(x-w,y)}Z`}
+    for(let i=0;i<(PT?4:6);i++){const y=y0+H*rr(.035,.2),x=rr(L,RT),w=W*rr(.1,.28),h=H*rr(.008,.016);
+      strip+=`M${P2(x-w,y)}Q${P2(x,y-h*2)} ${P2(x+w,y+h*.4)}Q${P2(x,y+h*.6)} ${P2(x-w,y)}Z`}
+    sheet(.46,6,C('meadow',land(rg))+C('meadow2',strip)+`<path class="c-riverD" d="${riv}" transform="translate(-2.2 -2.4)"/>`+C('river',riv)+C('rip',rip));
+  }
+  /* 7. woodland trees, two hillocks and the cottage */
+  {
+    const gy=H*Y.trees,g=[];for(let x=L;x<=RT+20;x+=W/18){const t=x/W,dip=Math.exp(-Math.pow((t-(PT?.47:.5))/(PT?.2:.17),2));g.push([x,J(gy-H*.035+dip*H*.2+Math.sin(t*7)*H*.008,1)])}
+    let trunks='',cA='',cB='',cO='',cY='',slit='';
+    const blob=(cx,cy,rx,ry,n=11)=>{const p=[];for(let i=0;i<n;i++){const a=i/n*6.283,q=J(1,.13);p.push([cx+Math.cos(a)*rx*q,cy+Math.sin(a)*ry*q])}return spc(p)};
+    const tree=(x,h,kind)=>{const yb=yAt(g,x)+8,lean=J(0,h*.05),tw=h*.034,ty=yb-h*.62;
+      trunks+=poly([[x-tw*1.5,yb],[x-tw*.9,yb-h*.3],[x-tw*.55+lean,ty],[x+tw*.55+lean,ty],[x+tw*.8,yb-h*.3],[x+tw*1.6,yb]]);
+      trunks+=poly([[x-tw*.3+lean*.6,yb-h*.4],[x-h*.16+lean,yb-h*.6],[x-h*.15+lean,yb-h*.62],[x+tw*.1+lean*.6,yb-h*.47]]);
+      trunks+=poly([[x+tw*.3+lean*.5,yb-h*.34],[x+h*.17+lean,yb-h*.55],[x+h*.16+lean,yb-h*.58],[x-tw*.1+lean*.5,yb-h*.42]]);
+      const add=d=>{if(kind==='O')cO+=d;else if(kind==='Y')cY+=d;else if(kind==='B')cB+=d;else cA+=d};
+      const cx=x+lean*1.3,cy=yb-h*.76;
+      add(blob(cx-h*.18,cy+h*.1,h*.17,h*.15,9));add(blob(cx+h*.19,cy+h*.08,h*.18,h*.15,9));add(blob(cx,cy-h*.02,h*.25,h*.23,13));
+      for(let i=0;i<5;i++){const a=rr(0,6.28),q=rr(.25,.75),lx=cx+Math.cos(a)*h*.2*q,ly=cy+Math.sin(a)*h*.18*q,s=h*rr(.03,.045),an=rr(-.9,.9),dx=Math.cos(an)*s,dy=Math.sin(an)*s;
+        slit+=`M${P2(lx-dx,ly-dy)}Q${P2(lx-dy*.45,ly+dx*.45)} ${P2(lx+dx,ly+dy)}Q${P2(lx+dy*.45,ly-dx*.45)} ${P2(lx-dx,ly-dy)}Z`}};
+    const TH=H*(PT?.36:.47);
+    (PT?[[.02,1,'A'],[.2,.78,'O'],[.84,.95,'A'],[1.0,.8,'B']]:[[-.01,.9,'B'],[.085,1.05,'A'],[.2,.78,'O'],[.3,.6,'B'],[.74,.66,'Y'],[.85,.98,'A'],[.955,.84,'B'],[1.03,1,'A']]).forEach(t=>tree(W*t[0],TH*t[1]*rr(.94,1.06),t[2]));
+    /* cottage tucked among the right-hand trees */
+    const cw=U*(PT?.12:.085),cx=W*(PT?.68:.665),cy=yAt(g,cx)+5,ch=cw*.62;
+    const cot=C('cot',poly([[cx-cw/2,cy],[cx-cw/2+1,cy-ch],[cx+cw/2-1,cy-ch-1],[cx+cw/2,cy]]))
+      +C('roof',poly([[cx-cw*.62,cy-ch+2],[cx-cw*.2,cy-ch-cw*.5],[cx+cw*.3,cy-ch-cw*.52],[cx+cw*.64,cy-ch+1]])+poly([[cx+cw*.2,cy-ch-cw*.42],[cx+cw*.2,cy-ch-cw*.74],[cx+cw*.34,cy-ch-cw*.74],[cx+cw*.34,cy-ch-cw*.38]]))
+      +C('door',poly([[cx-cw*.09,cy],[cx-cw*.09,cy-ch*.56],[cx+cw*.09,cy-ch*.58],[cx+cw*.09,cy]]));
+    const wn=[[-.31,.62],[.3,.62]].map(w=>[cx+w[0]*cw,cy-ch*w[1]]),ws=cw*.15;
+    const wins=wn.map(w=>`<circle class="winglow" cx="${f(w[0])}" cy="${f(w[1])}" r="${f(cw*.62)}" fill="url(#winG)"/>`).join('')+C('win',wn.map(w=>poly([[w[0]-ws/2,w[1]-ws/2],[w[0]+ws/2,w[1]-ws/2-.6],[w[0]+ws/2,w[1]+ws/2],[w[0]-ws/2,w[1]+ws/2+.5]])).join(''));
+    sheet(.6,8,C('ground',land(g))+cot+C('trunk',trunks)+C('tree2',cB)+C('tree',cA)+C('treeO',cO)+C('treeY',cY)+C('slit',slit),wins);
+  }
+  flies(5,.5,H*.4,H*.5);
+  /* 8. the clearing: mound, ferns and mushrooms */
+  {
+    const m=[];for(let x=L;x<=RT+20;x+=W/20){const t=x/W;m.push([x,J(H*Y.mound+Math.sin(t*5.2+1)*H*.012-Math.exp(-Math.pow((t-.5)/.34,2))*H*.02+Math.pow(Math.abs(t-.5)*2,2.2)*-H*.035,1)])}
+    moundPts=m;let fa='',fb='',stem='',cap='',cap2='',spot='';
+    const fern=(x,h,lean,light)=>{const yb=yAt(m,x)+6,n=9;let d='',px=x,py=yb;
+      for(let i=1;i<=n;i++){const t=i/n,nx=x+lean*h*t*t,ny=yb-h*t*(1-.12*t),tx=nx-px,ty=ny-py,q=Math.hypot(tx,ty)||1,ux=tx/q,uy=ty/q,len=h*.3*Math.sin(Math.PI*(t*.82+.14));
+        for(const s of[1,-1]){const bx=px,by=py,ex=px+(-uy*s)*len+ux*len*.5,ey=py+(ux*s)*len+uy*len*.5;
+          d+=`M${P2(bx-ux*h*.028,by-uy*h*.028)}Q${P2((bx+ex)/2+ux*len*.2,(by+ey)/2+uy*len*.2)} ${P2(J(ex,.8),J(ey,.8))}Q${P2((bx+ex)/2-ux*len*.12,(by+ey)/2-uy*len*.12)} ${P2(bx+ux*h*.045,by+uy*h*.045)}Z`}
+        d+=poly([[px-uy*1.3,py+ux*1.3],[nx-uy*.9,ny+ux*.9],[nx+uy*.9,ny-ux*.9],[px+uy*1.3,py-ux*1.3]]);px=nx;py=ny}
+      light?fb+=d:fa+=d};
+    const shroom=(x,s,alt)=>{const yb=yAt(m,x)+4,tl=J(0,s*.12);
+      stem+=`M${P2(x-s*.16,yb)}Q${P2(x-s*.08+tl,yb-s*.5)} ${P2(x-s*.12+tl,yb-s*.9)}L${P2(x+s*.12+tl,yb-s*.9)}Q${P2(x+s*.1+tl,yb-s*.5)} ${P2(x+s*.2,yb)}Z`;
+      const cx=x+tl,cy=yb-s*.82,d=`M${P2(cx-s*.62,cy)}C${P2(cx-s*.6,cy-s*J(.75,.06))} ${P2(cx+s*.5,cy-s*J(.82,.06))} ${P2(cx+s*.64,cy+s*.03)}Q${P2(cx,cy+s*.16)} ${P2(cx-s*.62,cy)}Z`;
+      alt?cap2+=d:cap+=d;
+      for(let i=0;i<3;i++){const a=cx+s*rr(-.36,.36),b=cy-s*rr(.16,.5),q=s*rr(.045,.085);spot+=`M${P2(a+q,b)}a${f(q)},${f(q*.8)} 0 1 0 ${f(-2*q)},0a${f(q)},${f(q*.8)} 0 1 0 ${f(2*q)},0Z`}};
+    const fh=U*(PT?.13:.15),ms=U*(PT?.05:.052);
+    (PT?[[.04,1,.5,0],[.13,.7,-.3,1],[.9,.95,-.5,0],[.99,.7,.2,1],[.78,.6,.4,1]]:[[.02,1,.5,0],[.075,.75,-.3,1],[.13,.9,.6,0],[.24,.55,.3,1],[.8,.6,-.4,1],[.87,.95,-.5,0],[.94,.72,.3,1],[.995,1,-.4,0]]).forEach(q=>fern(W*q[0],fh*q[1]*rr(.9,1.1),q[2],q[3]));
+    (PT?[[.2,1,0],[.27,.6,1],[.15,.5,0],[.72,.9,1],[.66,.55,0]]:[[.175,1,0],[.205,.62,1],[.15,.5,0],[.285,.7,0],[.735,.95,1],[.765,.6,0],[.7,.5,0],[.905,.55,1]]).forEach(q=>shroom(W*q[0],ms*q[1]*rr(.9,1.12),q[2]));
+    sheet(.76,9,C('fern2',fb)+C('mound',land(m))+C('fern',fa)+C('stem',stem)+C('cap',cap)+C('cap2',cap2)+C('stem',spot));
+    spots=(PT?[.3,.46,.56,.4,.5]:[.36,.47,.56,.5,.41,.3]).map(t=>[W*t,yAt(m,W*t)+3]);
+  }
+  /* the fox sits here in the stack */
+  if(!foxEl)makeFox();dio.appendChild(foxEl);sizeFox();
+  leaves(3);flies(5,.8,H*.55,H*.36);
+  /* 9. foreground grasses, foxgloves, wildflowers and an overhanging branch */
+  {
+    let ga='',gb='',f1='',f2='',f3='',bell='',bell2='',st='';
+    const blade=(x,yb,h,lean,w)=>`M${P2(x-w,yb)}Q${P2(x-w*.6+lean*.35,yb-h*.6)} ${P2(x+lean,yb-h)}Q${P2(x+w*.9+lean*.3,yb-h*.5)} ${P2(x+w,yb)}Z`;
+    const edge=t=>.55+Math.pow(Math.abs(t-.5)*2,1.6)*1.25,gh=H*(PT?.075:.1);
+    for(let x=L;x<RT;x+=rr(5,11)*(U/700+.45)){const t=x/W,h=gh*edge(t)*rr(.45,1.1),d=blade(x,B,h+OY+12,J(0,h*.3),rr(2.4,5.2)*(U/700+.4));R()<.5?ga+=d:gb+=d}
+    const flower=(x,h,k)=>{const yb=B,lean=J(0,h*.2),tx=x+lean,ty=H-h;st+=`M${P2(x-1.3,yb)}Q${P2(x+lean*.2,(yb+ty)/2)} ${P2(tx-.7,ty)}L${P2(tx+.9,ty)}Q${P2(x+lean*.3+1.6,(yb+ty)/2)} ${P2(x+1.6,yb)}Z`;
+      const s=U*rr(.0075,.011);let d='';for(let i=0;i<5;i++){const a=i*1.257+rr(-.15,.15),px=tx+Math.cos(a)*s*.95,py=ty+Math.sin(a)*s*.95;d+=`M${P2(px+s*.68,py)}a${f(s*.68)},${f(s*.6)} 0 1 0 ${f(-s*1.36)},0a${f(s*.68)},${f(s*.6)} 0 1 0 ${f(s*1.36)},0Z`}
+      k===0?f1+=d:k===1?f2+=d:f3+=d;const c=`M${P2(tx+s*.42,ty)}a${f(s*.42)},${f(s*.42)} 0 1 0 ${f(-s*.84)},0a${f(s*.42)},${f(s*.42)} 0 1 0 ${f(s*.84)},0Z`;k===1?f3+=c:f2+=c};
+    const foxglove=(x,h,dir)=>{const yb=B,lean=dir*h*.1,n=8;st+=`M${P2(x-2.2,yb)}Q${P2(x+lean*.3,H-h*.5)} ${P2(x+lean-.5,H-h)}L${P2(x+lean+.8,H-h)}Q${P2(x+lean*.4+2.4,H-h*.5)} ${P2(x+2.4,yb)}Z`;
+      for(let i=0;i<n;i++){const t=i/(n-1),yy=H-h*(.36+.6*t),xx=x+lean*Math.pow(.36+.6*t,2),s=h*.075*(1-t*.62),sd=(i%3===2?-dir:dir),a=sd*rr(.35,.6);
+        const ca=Math.cos(a),sa=Math.sin(a),T=(px,py)=>P2(xx+(px*ca-py*sa)*sd,yy+(px*sa*sd+py*ca));
+        const d=`M${T(0,0)}C${T(s*.55,-s*.1)} ${T(s*1,s*.5)} ${T(s*.9,s*1.25)}Q${T(s*.45,s*1.05)} ${T(s*.05,s*1.3)}C${T(-s*.12,s*.7)} ${T(-s*.12,s*.25)} ${T(0,0)}Z`;
+        i%2?bell2+=d:bell+=d}
+      for(const s of[-1,1]){const l=h*rr(.22,.3);ga+=`M${P2(x,yb-OY)}Q${P2(x+s*l*.5,H-l*1.1)} ${P2(x+s*l,H-l*.55)}Q${P2(x+s*l*.5,H-l*.3)} ${P2(x,yb)}Z`}};
+    const fg=H*(PT?.25:.33);
+    (PT?[[.1,1,1],[.9,.9,-1]]:[[.055,1,1],[.115,.72,1],[.93,.95,-1]]).forEach(q=>foxglove(W*q[0],fg*q[1],q[2]));
+    (PT?[[.24,.11,0],[.33,.07,1],[.72,.1,2],[.63,.06,0],[.5,.045,1]]:[[.19,.1,0],[.24,.065,1],[.31,.05,2],[.42,.04,0],[.61,.04,1],[.7,.06,0],[.77,.09,2],[.84,.07,1],[.985,.12,0]]).forEach(q=>flower(W*q[0],H*q[1]*rr(.9,1.1),q[2]));
+    /* branch reaching in from the top right */
+    let br='',lv='',lv2='';
+    {const bx=RT,by=H*(PT?.02:.04),len=W*(PT?.42:.26),pts=[];for(let i=0;i<=8;i++){const t=i/8;pts.push([bx-len*t,by+Math.sin(t*2.2)*H*.06+t*t*H*.05])}
+      const up=pts.map((q,i)=>[q[0],q[1]-U*.011*(1-i/9)]),dn=pts.map((q,i)=>[q[0],q[1]+U*.011*(1-i/9)]).reverse();
+      br=`M${P2(up[0][0],up[0][1])}${sp(up)}L${P2(dn[0][0],dn[0][1])}${sp(dn)}Z`;
+      for(let i=1;i<=8;i++)for(const s of[1,-1]){if(R()<.18)continue;const q=pts[i],a=Math.PI/2*s+rr(.2,.9)*(s>0?1:-1)+(s>0?.4:-.2),l=U*rr(.04,.06),ex=q[0]+Math.cos(a)*l,ey=q[1]+Math.sin(a)*l,nx=-Math.sin(a)*l*.3,ny=Math.cos(a)*l*.3;
+        const d=`M${P2(q[0],q[1])}Q${P2((q[0]+ex)/2+nx,(q[1]+ey)/2+ny)} ${P2(ex,ey)}Q${P2((q[0]+ex)/2-nx,(q[1]+ey)/2-ny)} ${P2(q[0],q[1])}Z`;R()<.3?lv2+=d:lv+=d}}
+    sheet(1,13,C('fg2',gb)+C('fg',st)+C('bell',bell)+C('bell2',bell2)+C('flw1',f1)+C('flw2',f2)+C('flw3',f3)+C('fg',ga)+C('fg',br)+C('fg',lv)+C('fg2',lv2),'',{sway:!reduce});
+  }
+  leaves(3);flies(4,1,H*.3,H*.6);
+  /* light, dust and the depth of the box */
+  const add=(cls,html='')=>{const e=document.createElement('div');e.className=cls;e.innerHTML=html;dio.appendChild(e);return e};
+  let mh='';for(let i=0;i<(PT?12:18);i++)mh+=`<span class="mote" style="left:${rr(4,62).toFixed(1)}%;top:${rr(8,74).toFixed(1)}%;--T:${rr(9,19).toFixed(1)}s;--dl:${rr(-18,0).toFixed(1)}s;--dx:${rr(-40,70).toFixed(0)}px;--dy:${rr(20,90).toFixed(0)}px"></span>`;
+  add('shafts');add('motes',mh);add('moonwash');add('depth');
+  /* title tag */
+  const tg=add('tagw',`<div class="tagwrap"><div class="string"></div><div class="tag"><h1>Foxglove Hollow</h1><p>an enchanted paper forest</p></div></div>`);
+  tg.style.setProperty('--tagx',PT?'40%':'33%');tg.style.setProperty('--sl',Math.round(H*(PT?.05:.075))+'px');tagEl=tg;
+  tg.style.marginLeft=-tg.offsetWidth/2+'px';
+  hazeStyle();placeFox(true);
+}
+function hazeStyle(){dio.querySelectorAll('.haze').forEach(h=>{h.style.background=night?'linear-gradient(180deg,rgba(150,150,225,0),rgba(160,158,232,.34) 55%,rgba(150,150,225,0))':'linear-gradient(180deg,rgba(255,244,214,0),rgba(255,244,214,.42) 55%,rgba(255,244,214,0))'})}
+
+/* drifting paper leaves and fireflies, added between sheets so they sit at different depths */
+let leafSeed=1;
+function leaves(n){if(reduce)return;const R=rng(500+leafSeed++),rr=(a,b)=>a+(b-a)*R();
+  for(let i=0;i<n;i++){const e=document.createElement('div'),s=U*rr(.018,.034),c=['leafA','leafB','leafC','leafA'][(R()*4)|0],y0=rr(-.1,.55)*H;
+    e.className='leaf';e.style.cssText=`--i:6;--T:${rr(19,36).toFixed(1)}s;--t2:${rr(2.6,5.2).toFixed(1)}s;--dl:${rr(-36,0).toFixed(1)}s;--x0:${-s*3}px;--y0:${y0.toFixed(0)}px;--x1:${W+s*3}px;--y1:${(y0+rr(.12,.5)*H).toFixed(0)}px`;
+    e.innerHTML=`<i><svg width="${s.toFixed(0)}" height="${(s*.6).toFixed(0)}" viewBox="0 0 30 18"><path class="c-${c}" d="M1,10C7,1 20,0 29,7C22,17 9,18 1,10Z"/><path d="M3,10C12,8 20,8 27,7" stroke="rgba(0,0,0,.18)" stroke-width="1" fill="none"/></svg></i>`;
+    dio.appendChild(e)}}
+let flySeed=1;
+function flies(n,scale,top,h){const R=rng(900+flySeed++),rr=(a,b)=>a+(b-a)*R(),e=document.createElement('div');e.className='flies';let s='';
+  for(let i=0;i<n;i++)s+=`<span class="fly" style="left:${rr(5,92).toFixed(1)}%;top:${(top+rr(0,h)).toFixed(0)}px;--z:${(rr(5,9)*scale*(U/800+.4)).toFixed(1)}px;--T:${rr(7,15).toFixed(1)}s;--t2:${rr(5,11).toFixed(1)}s;--t3:${rr(3.2,7.5).toFixed(1)}s;--dl:${rr(-12,0).toFixed(1)}s;--dx:${rr(-90,90).toFixed(0)}px;--dy:${rr(-60,40).toFixed(0)}px"><i><b></b></i></span>`;
+  e.innerHTML=s;dio.appendChild(e);layers.push({el:e,par:scale*.8})}
+
+/* ---------- fox ---------- */
+let tagEl=null,fx=0,fy=0,face=1,hopping=null,tailA=0,tailV=0,tailT=0,sq=1,rot=0;
+function makeFox(){
+  foxEl=document.createElement('button');foxEl.type='button';foxEl.className='fox';foxEl.setAttribute('aria-label','The fox. Press to make it hop.');
+  foxEl.innerHTML=`<svg viewBox="0 0 150 120" aria-hidden="true">
+    <g id="tailJ"><g class="tailI">
+      <path class="c-fox" d="M54,100C36,108 9,97 6,70C4,52 13,40 25,43C20,56 27,76 50,84Z"/>
+      <path class="c-foxc" d="M6,70C4,52 13,40 25,43C22,51 22,58 25,66C18,63 11,65 6,70Z"/>
+    </g></g>
+    <path class="c-fox" d="M45,113C33,108 31,92 38,80C45,66 59,59 75,59C89,59 97,67 97,79L98,113L84,113L83,97C80,105 74,111 66,113Z"/>
+    <path class="c-foxc" d="M79,63C91,63 97,71 97,81L97,101C89,95 81,81 79,63Z"/>
+    <path class="c-foxd" d="M83,107h15v6.2h-15zM60,108C67,105 75,107 77,113.2L56,113.2C56,111 58,109 60,108Z"/>
+    <g class="head">
+      <path class="c-fox" d="M65,38L61,9L81,29ZM84,29L93,5L101,31Z"/>
+      <path class="c-foxd" d="M61,9L62.6,19L68.5,16ZM93,5L90,15L96.4,15.5Z"/>
+      <path class="c-foxc" d="M68,32L66.4,20L75.5,29Z"/>
+      <path class="c-fox" d="M62,45C60,33 72,25 86,27C99,29 105,37 123,51C113,59 101,65 86,65C72,65 64,57 62,45Z"/>
+      <path class="c-foxc" d="M86,65C101,65 113,59 123,51C111,49 101,49 93,53C87,56 84,61 86,65ZM62,45C63,53 68,61 78,64C72,57 68,51 66,45Z"/>
+      <circle class="c-foxd" cx="121" cy="51" r="3.1"/>
+      <g class="eye"><ellipse class="c-foxd" cx="97" cy="43" rx="2.5" ry="3.1"/></g>
+    </g></svg>`;
+  foxEl.addEventListener('click',hop);
+  /* small idle habits */
+  const idle=()=>{if(!hopping&&!document.hidden){const r=Math.random(),sel=r<.45?['.eye','blink']:r<.75?['.tailI','swish']:['.head','tilt'],el=foxEl.querySelector(sel[0]);
+      el.classList.remove(sel[1]);void el.getBoundingClientRect();el.classList.add(sel[1])}
+    setTimeout(idle,1800+Math.random()*3600)};
+  setTimeout(idle,1500);
+}
+let FW=100,FH=80;
+function sizeFox(){FW=Math.max(64,Math.min(U*(PT?.2:.17),160));FH=FW*.8;foxEl.style.width=FW+'px';foxEl.style.height=FH+'px'}
+function placeFox(snap){if(snap||!hopping){const s=spots[foxSpot%spots.length];fx=s[0];fy=s[1];hopping=null;sq=1;rot=0}}
+function hop(){
+  if(hopping)return;let j;do{j=(Math.random()*spots.length)|0}while(j===foxSpot%spots.length);
+  const a=[fx,fy],b=spots[j];foxSpot=j;face=b[0]>=a[0]?1:-1;
+  hopping={a,b,t0:performance.now(),h:U*.07+Math.abs(b[0]-a[0])*.22,quick:reduce};
+}
+function foxFrame(now){
+  if(hopping){
+    const h=hopping,t=now-h.t0,C=h.quick?0:150,F=h.quick?260:560,Ld=h.quick?0:380;
+    if(t<C){const p=t/C;sq=1-.2*Math.sin(p*Math.PI/2);rot=0;tailT=14*p}
+    else if(t<C+F){const p=(t-C)/F,e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2,arc=h.quick?0:4*h.h*p*(1-p);
+      fx=h.a[0]+(h.b[0]-h.a[0])*(p*.75+e*.25);fy=h.a[1]+(h.b[1]-h.a[1])*p-arc;sq=1+.1*Math.sin(p*Math.PI);rot=h.quick?0:-17+31*p;tailT=(1-2*p)*-34}
+    else if(t<C+F+Ld){const p=(t-C-F)/Ld;fx=h.b[0];fy=h.b[1]-Math.abs(Math.sin(p*Math.PI*2))*U*.012*(1-p);sq=1-.17*Math.exp(-p*5)*Math.cos(p*11);rot=14*Math.exp(-p*7)*(1-p);tailT=0}
+    else{fx=h.b[0];fy=h.b[1];sq=1;rot=0;tailT=0;hopping=null}
+  }
+  tailV+=(tailT-tailA)*.085;tailV*=.86;tailA+=tailV;
+  const par=.76;
+  foxEl.style.transform=`translate3d(${(fx-FW*.47-px*MX*par).toFixed(2)}px,${(fy-FH*.94-py*MY*par).toFixed(2)}px,0)`;
+  foxEl.firstElementChild.style.transform=`scaleX(${face}) rotate(${rot.toFixed(2)}deg) scale(${(2-sq).toFixed(3)},${sq.toFixed(3)})`;
+  const tj=foxEl.querySelector('#tailJ');tj.style.transformBox='view-box';tj.style.transformOrigin='50px 98px';tj.style.transform=`rotate(${tailA.toFixed(2)}deg)`;
+}
+
+/* ---------- parallax, tag sway and the frame loop ---------- */
+let px=0,py=0,tx=0,ty=0,lastMove=0,tagA=0,tagV=0,lastX=null;
+function frame(now){
+  const idle=now-lastMove>3500&&!reduce;
+  const gx=idle?Math.sin(now/5200)*.32:tx,gy=idle?Math.cos(now/6700)*.22:ty;
+  px+=(gx-px)*(idle?.012:.075);py+=(gy-py)*(idle?.012:.075);
+  for(const l of layers)l.el.style.transform=`translate3d(${(-px*MX*l.par).toFixed(2)}px,${(-py*MY*l.par).toFixed(2)}px,0)`;
+  foxFrame(now);
+  if(tagEl){tagV+=(-tagA)*.012+(reduce?0:Math.sin(now/2300)*.0016);tagV*=.985;tagA+=tagV;tagA=Math.max(-9,Math.min(9,tagA));
+    tagEl.style.transform=`translate3d(${(-px*MX*.9).toFixed(2)}px,0,0) rotate(${tagA.toFixed(3)}deg)`}
+  requestAnimationFrame(frame);
+}
+function point(e){const b=dio.getBoundingClientRect();tx=Math.max(-1,Math.min(1,(e.clientX-b.left)/b.width*2-1));ty=Math.max(-1,Math.min(1,(e.clientY-b.top)/b.height*2-1));
+  if(lastX!==null&&!reduce)tagV+=Math.max(-.5,Math.min(.5,(e.clientX-lastX)*-.006));lastX=e.clientX;lastMove=performance.now()}
+dio.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||e.buttons||e.pressure>0)point(e)});
+dio.addEventListener('pointerdown',e=>{lastX=e.clientX;point(e)});
+dio.addEventListener('pointerleave',()=>{lastX=null;lastMove=0});
+
+/* ---------- day and night ---------- */
+const sw=$('#sw');
+function setNight(on){night=on;dio.classList.toggle('night',on);box.classList.toggle('night',on);sw.setAttribute('aria-checked',on);hazeStyle()}
+sw.addEventListener('click',()=>setNight(!night));
+
+/* colour classes come from the palette variables, so every sheet repaints by itself */
+const st=document.createElement('style');
+st.textContent=[...getComputedStyle(dio).cssText.matchAll(/--([A-Za-z0-9]+):/g)].map(m=>m[1]).concat(
+  ['sky','cloud','hill','mtA','mtB','pineB','pine','meadow','meadow2','river','riverD','rip','ground','tree','tree2','treeO','treeY','trunk','slit','cot','roof','win','door','mound','fern','fern2','cap','cap2','stem','fg','fg2','flw1','flw2','flw3','bell','bell2','fox','foxc','foxd','leafA','leafB','leafC'])
+  .filter((v,i,a)=>a.indexOf(v)===i).map(k=>`.c-${k}{fill:var(--${k})}`).join('');
+document.head.appendChild(st);
+
+build();setNight(night);requestAnimationFrame(frame);
+/* rebuild the composition when the box changes shape; the fox keeps its spot and the mode is untouched */
+let rz=0,lw=W,lh=H;
+let lastBuild=0;
+const rebuild=()=>{if(dio.clientWidth===lw&&dio.clientHeight===lh)return;lw=dio.clientWidth;lh=dio.clientHeight;leafSeed=flySeed=1;lastBuild=performance.now();build()};
+new ResizeObserver(()=>{clearTimeout(rz);if(performance.now()-lastBuild>400)rebuild();else rz=setTimeout(rebuild,140)}).observe(dio);
+
+/* ---------- the prompt page ---------- */
+const brief=$('#brief');
+$('#briefBody').innerHTML=$('#promptSrc').textContent.trim().split(/\n\s*\n/).map(p=>'<p>'+esc(p).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>')+'</p>').join('');
+const setBrief=on=>{brief.classList.toggle('on',on);brief.setAttribute('aria-hidden',!on);(on?$('#briefClose'):$('#briefBtn')).focus({preventScroll:true})};
+$('#briefBtn').addEventListener('click',()=>setBrief(true));
+$('#briefClose').addEventListener('click',()=>setBrief(false));
+brief.addEventListener('click',e=>{if(e.target===brief)setBrief(false)});
+addEventListener('keydown',e=>{if(e.key==='Escape')setBrief(false)});
+if(/prompt/.test(location.hash))setBrief(true);
+})();
+</script>
+</body>
+</html>

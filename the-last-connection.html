@@ -1,0 +1,827 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Last Connection</title>
+<meta name="description" content="A working rotary telephone from 1939 on a desk in the rain. Lift the receiver and dial. Built by Claude Fable 5.2 from one prompt, in one HTML file.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Homemade+Apple&display=swap" rel="stylesheet">
+<style>
+:root{
+  --type:"American Typewriter","Courier Prime","Courier New",monospace;
+  --serif:Georgia,"Times New Roman",serif;
+  --hand:"Homemade Apple","Segoe Script","Bradley Hand","Snell Roundhand",cursive;
+  --u:min(1vw,1.7778vh); --ivory:#e4dfd0;
+}
+*{box-sizing:border-box}
+html,body{height:100%; margin:0; background:#050505; overflow:hidden}
+body{font-family:var(--type); color:var(--ivory); -webkit-user-select:none; user-select:none}
+button{font-family:inherit; color:inherit}
+.scene{position:fixed; inset:0; overflow:hidden; background:#0b0b0b}
+
+/* room */
+.wall{position:absolute; left:0; right:0; top:0; height:calc(50% + var(--u)*.5);
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.022) 0 2px,rgba(0,0,0,0) 2px calc(var(--u)*3.2)),
+    radial-gradient(90% 120% at 68% 60%,#4b4b49 0%,#2c2c2b 45%,#121212 100%)}
+.wall::after{content:""; position:absolute; left:0; right:0; bottom:0; height:calc(var(--u)*4.4);
+  background:linear-gradient(180deg,#0c0c0c,#262625 12%,#171717 60%,#0a0a0a); box-shadow:0 -1px 0 rgba(255,255,255,.07)}
+.desk{position:absolute; left:0; right:0; bottom:0; top:calc(50% - var(--u)*.5);
+  background-color:#262624; background-image:var(--wood,none),linear-gradient(180deg,#3d3d3a 0%,#2a2a28 30%,#131312 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.14),inset 0 12px 30px rgba(0,0,0,.5)}
+.stage{position:absolute; left:50%; top:50%; width:calc(var(--u)*100); height:calc(var(--u)*56.25); transform:translate(-50%,-50%)}
+.o{position:absolute; left:calc(var(--u)*var(--x)); top:calc(var(--u)*var(--y)); width:calc(var(--u)*var(--w))}
+
+/* window */
+.window{--x:5; --y:1.2; --w:37; height:calc(var(--u)*24.5); background:#101010; border:calc(var(--u)*.7) solid #0d0d0d;
+  box-shadow:0 0 0 1px #2c2c2c,inset 0 0 calc(var(--u)*2) #000,0 calc(var(--u)*.8) calc(var(--u)*2.4) rgba(0,0,0,.8); overflow:hidden}
+.window svg,.window canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.window .fall{position:absolute; inset:-20% 0; opacity:.35;
+  background:repeating-linear-gradient(98deg,rgba(255,255,255,0) 0 7px,rgba(255,255,255,.16) 7px 8px,rgba(255,255,255,0) 8px 19px); background-size:38px 200%; animation:fall .5s linear infinite}
+@keyframes fall{to{background-position:-12px 200px}}
+.window .bars{position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(90deg,transparent calc(50% - var(--u)*.35),#0b0b0b calc(50% - var(--u)*.35) calc(50% + var(--u)*.35),transparent calc(50% + var(--u)*.35)),
+    linear-gradient(180deg,transparent calc(42% - var(--u)*.3),#0b0b0b calc(42% - var(--u)*.3) calc(42% + var(--u)*.3),transparent calc(42% + var(--u)*.3)),
+    linear-gradient(115deg,rgba(255,255,255,.07) 0 18%,rgba(255,255,255,0) 30% 62%,rgba(255,255,255,.04) 70%,rgba(255,255,255,0) 82%)}
+.window .bolt{position:absolute; inset:0; background:#fff; opacity:0; mix-blend-mode:overlay}
+.flash .window .bolt{opacity:.9}
+.flash .window svg{filter:brightness(2.6)}
+.spill{position:absolute; left:calc(var(--u)*-8); top:calc(var(--u)*27.6); width:calc(var(--u)*70); height:calc(var(--u)*30); pointer-events:none; opacity:.5;
+  background:linear-gradient(165deg,rgba(255,255,255,.1),rgba(255,255,255,0) 60%); clip-path:polygon(18% 0,62% 0,100% 100%,0 100%); transition:opacity .08s}
+.flash .spill{opacity:1; background:linear-gradient(165deg,rgba(255,255,255,.5),rgba(255,255,255,0) 75%)}
+.roomflash{position:absolute; inset:0; background:#dfe3e6; opacity:0; pointer-events:none; mix-blend-mode:soft-light; z-index:30}
+.flash .roomflash{opacity:.75}
+.cal{--x:46; --y:5; --w:6.4; padding:calc(var(--u)*.5) 0 calc(var(--u)*.6); background:linear-gradient(175deg,#cfcabb,#a9a598); color:#161616; text-align:center; transform:rotate(1.2deg);
+  box-shadow:calc(var(--u)*.3) calc(var(--u)*.5) calc(var(--u)*1) rgba(0,0,0,.7); font-size:calc(var(--u)*.72); letter-spacing:.12em; filter:brightness(.72)}
+.cal b{display:block; font-family:var(--serif); font-size:calc(var(--u)*3.3); line-height:1; letter-spacing:0; margin:.08em 0}
+.cal::before{content:""; position:absolute; left:50%; top:calc(var(--u)*-.5); width:calc(var(--u)*.5); height:calc(var(--u)*.5); margin-left:calc(var(--u)*-.25); border-radius:50%; background:#777; box-shadow:0 1px 1px #000}
+
+/* things on the desk */
+.flat{transform-origin:50% 100%}
+.paper{background-color:#cbc6b6; background-image:var(--pgrain,none),linear-gradient(170deg,#d9d4c4,#b4b0a2); color:#151515; box-shadow:calc(var(--u)*.5) calc(var(--u)*.9) calc(var(--u)*1.6) rgba(0,0,0,.75)}
+.news{--x:4; --y:23.2; --w:27; height:calc(var(--u)*13); padding:calc(var(--u)*.7) calc(var(--u)*1); transform:perspective(calc(var(--u)*70)) rotateX(52deg) rotate(-7deg); filter:brightness(.74); overflow:hidden; font-family:var(--serif)}
+.news h3{margin:0; text-align:center; font-size:calc(var(--u)*1.75); letter-spacing:.06em; font-weight:700; border-bottom:2px solid #1b1b1b; padding-bottom:.12em; font-variant:small-caps}
+.news .dt{display:flex; justify-content:space-between; font-size:calc(var(--u)*.55); letter-spacing:.14em; border-bottom:1px solid #1b1b1b; padding:.3em 0; font-family:var(--type)}
+.news h4{margin:.22em 0 .1em; font-size:calc(var(--u)*2); line-height:1; text-align:center; letter-spacing:.01em}
+.news h5{margin:0 0 .4em; font-size:calc(var(--u)*.86); text-align:center; font-weight:400; font-style:italic}
+.news .cols{height:calc(var(--u)*6); column-count:4; column-gap:calc(var(--u)*.7);
+  background:repeating-linear-gradient(180deg,rgba(20,20,20,.62) 0 1px,transparent 1px calc(var(--u)*.42))}
+.news::after{content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent 49.4%,rgba(0,0,0,.28) 50%,rgba(255,255,255,.14) 50.5%,transparent 51.4%)}
+.docs{--x:77; --y:30.5; --w:17; height:calc(var(--u)*9); transform:perspective(calc(var(--u)*70)) rotateX(54deg) rotate(9deg); filter:brightness(.8)}
+.docs i{position:absolute; inset:0; display:block; background:repeating-linear-gradient(180deg,transparent 0 calc(var(--u)*.5),rgba(20,20,20,.5) calc(var(--u)*.5) calc(var(--u)*.58),transparent calc(var(--u)*.58) calc(var(--u)*.95)) 12% 20%/76% 62% no-repeat}
+.docs i:first-child{transform:rotate(-13deg) translate(-12%,6%); filter:brightness(.86)}
+.lamp{--x:72; --y:5.5; --w:22; pointer-events:none; z-index:9}
+.lamp svg,.phone svg,.pen svg,.ash svg{display:block; width:100%; height:auto; overflow:visible}
+.glow{position:absolute; left:calc(var(--u)*30); top:calc(var(--u)*10); width:calc(var(--u)*72); height:calc(var(--u)*46); pointer-events:none; mix-blend-mode:screen; z-index:10;
+  background:radial-gradient(closest-side at 62% 52%,rgba(255,252,238,.34),rgba(255,252,238,.12) 45%,rgba(255,252,238,0) 100%); animation:lampA 9s ease-in-out infinite}
+.cone{position:absolute; left:calc(var(--u)*52); top:calc(var(--u)*12.5); width:calc(var(--u)*36); height:calc(var(--u)*26); pointer-events:none; mix-blend-mode:screen; opacity:.34; z-index:10; filter:blur(calc(var(--u)*1.1));
+  background:linear-gradient(200deg,rgba(255,252,238,.5),rgba(255,252,238,0) 78%); clip-path:polygon(64% 0,88% 6%,100% 100%,0 100%); animation:lampA 9s ease-in-out infinite}
+@keyframes lampA{0%,100%{opacity:.96}13%{opacity:.9}14%{opacity:.99}37%{opacity:.93}52%{opacity:1}53%{opacity:.86}55%{opacity:.98}78%{opacity:.91}}
+.cone{animation-name:lampB}
+@keyframes lampB{0%,100%{opacity:.34}14%{opacity:.31}53%{opacity:.26}55%{opacity:.36}78%{opacity:.3}}
+.ash{--x:59.5; --y:25.6; --w:9.5}
+.puff{position:absolute; left:calc(var(--u)*64.6); top:calc(var(--u)*25.6); width:calc(var(--u)*5); height:calc(var(--u)*7); margin:calc(var(--u)*-6) 0 0 calc(var(--u)*-2.5); pointer-events:none; opacity:0;
+  background:radial-gradient(closest-side,rgba(235,235,230,.5),rgba(235,235,230,.16) 55%,rgba(235,235,230,0)); border-radius:50%; animation:smoke 11s linear infinite; animation-delay:var(--d)}
+@keyframes smoke{0%{transform:translate(0,0) scale(.12,.3); opacity:0}8%{opacity:.5}35%{transform:translate(calc(var(--u)*-1.2),calc(var(--u)*-7)) scale(.5,1.1) rotate(8deg); opacity:.34}
+  70%{transform:translate(calc(var(--u)*1.6),calc(var(--u)*-15)) scale(1.3,1.9) rotate(-14deg); opacity:.16}100%{transform:translate(calc(var(--u)*-2.4),calc(var(--u)*-24)) scale(2.4,2.6) rotate(10deg); opacity:0}}
+.phone{--x:31; --y:13.8; --w:38; z-index:5}
+.phone.shake{animation:shake .09s linear infinite}
+@keyframes shake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(.9px,-.5px) rotate(.12deg)}50%{transform:translate(-.8px,.4px) rotate(-.1deg)}75%{transform:translate(.5px,.6px) rotate(.08deg)}}
+#handset{cursor:pointer; outline:none}
+#handset:focus-visible .hfocus{opacity:1}
+.hole{cursor:grab; fill:rgba(0,0,0,.001)}
+.dragging .hole{cursor:grabbing}
+#dial{touch-action:none}
+
+.dir{--x:3.2; --y:32.4; --w:26; z-index:6; display:grid; grid-template-columns:1fr 1fr; transform:perspective(calc(var(--u)*80)) rotateX(24deg) rotate(-4deg); filter:brightness(.9);
+  box-shadow:calc(var(--u)*.6) calc(var(--u)*1.2) calc(var(--u)*2) rgba(0,0,0,.8),0 0 0 calc(var(--u)*.45) #0e0e0e}
+.dir .pg{padding:calc(var(--u)*.9) calc(var(--u)*.9) calc(var(--u)*1); min-height:calc(var(--u)*17);
+  background-color:#cdc8b9; background-image:var(--pgrain,none),repeating-linear-gradient(180deg,transparent 0 calc(var(--u)*1.52),rgba(40,40,40,.2) calc(var(--u)*1.52) calc(var(--u)*1.58)),linear-gradient(90deg,#d8d3c4,#b9b5a7)}
+.dir .pg:first-child{box-shadow:inset calc(var(--u)*-1.2) 0 calc(var(--u)*1.4) calc(var(--u)*-.8) rgba(0,0,0,.55)}
+.dir .pg+.pg{background-image:var(--pgrain,none),repeating-linear-gradient(180deg,transparent 0 calc(var(--u)*1.52),rgba(40,40,40,.2) calc(var(--u)*1.52) calc(var(--u)*1.58)),linear-gradient(90deg,#aeaa9c,#d5d0c1 14%,#c4c0b1); box-shadow:inset calc(var(--u)*1.2) 0 calc(var(--u)*1.4) calc(var(--u)*-.8) rgba(0,0,0,.5)}
+.dir h2{margin:0 0 calc(var(--u)*.5); font:700 calc(var(--u)*.72)/1 var(--type); letter-spacing:.2em; color:#222; text-align:center; border-bottom:1px solid rgba(30,30,30,.5); padding-bottom:calc(var(--u)*.4)}
+.ent{display:block; width:100%; margin:0 0 calc(var(--u)*.3); padding:calc(var(--u)*.15) calc(var(--u)*.2); border:0; background:none; text-align:left; cursor:pointer; color:#1a1a1a; position:relative}
+.ent .nm{display:block; font:calc(var(--u)*.84)/1.25 var(--hand); white-space:nowrap}
+.ent .nb{display:block; font:700 calc(var(--u)*.8)/1.5 var(--type); letter-spacing:.1em; color:#2a2a2a}
+.ent .nb u{text-decoration:none; letter-spacing:.3em; opacity:.55}
+.ent .nb b{display:none; font-size:1.15em}
+.ent.sel .nb u{display:none} .ent.sel .nb b{display:inline}
+.ent.sel::after{content:""; position:absolute; inset:calc(var(--u)*-.1) calc(var(--u)*-.3); border:1.5px solid rgba(25,25,25,.62); border-radius:48% 52% 55% 45%/60% 48% 52% 40%; transform:rotate(-1.4deg); pointer-events:none}
+.ent.gone .nm{text-decoration:line-through; opacity:.6}
+.ent:focus-visible,.plate:focus-visible,.status:focus-visible,.enter:focus-visible{outline:2px solid #f1eee4; outline-offset:2px}
+.dir .foot{font:calc(var(--u)*.74)/1.4 var(--hand); color:#333; margin-top:calc(var(--u)*.3)}
+
+.pad{--x:71.5; --y:36.6; --w:14.5; z-index:6; min-height:calc(var(--u)*17.5); padding:calc(var(--u)*2.2) calc(var(--u)*1) calc(var(--u)*1); transform:perspective(calc(var(--u)*80)) rotateX(22deg) rotate(5deg);
+  background-image:var(--pgrain,none),repeating-linear-gradient(180deg,transparent 0 calc(var(--u)*1.9),rgba(40,40,40,.22) calc(var(--u)*1.9) calc(var(--u)*1.96)),linear-gradient(170deg,#ded9ca,#bdb9ab)}
+.pad::before{content:""; position:absolute; left:0; right:0; top:0; height:calc(var(--u)*1.3); background:linear-gradient(180deg,#1b1b1b,#3a3a3a 60%,#111); box-shadow:0 2px 3px rgba(0,0,0,.5)}
+.pad small{display:block; font:calc(var(--u)*.62)/1 var(--type); letter-spacing:.2em; color:#444}
+.pad .ring{font:calc(var(--u)*.86)/1.6 var(--hand); color:#333; min-height:1.6em; white-space:nowrap; overflow:hidden}
+.pad .num{font:calc(var(--u)*2.5)/1.25 var(--hand); color:#121212; min-height:1.3em; letter-spacing:.06em; white-space:nowrap}
+.pad .num span{display:inline-block; animation:ink .35s ease-out}
+.pad .old{font:calc(var(--u)*1.1)/1.5 var(--hand); color:#555; text-decoration:line-through; min-height:1.5em}
+@keyframes ink{from{opacity:0; transform:translateY(-3px) scale(1.15)}}
+.pen{--x:58; --y:50.2; --w:17; z-index:7; transform:rotate(-9deg); filter:drop-shadow(calc(var(--u)*.3) calc(var(--u)*.6) calc(var(--u)*.5) rgba(0,0,0,.8))}
+
+/* film */
+.night-ov{position:absolute; left:calc(50% - 100vw); top:calc(50% - 100vh); width:200vw; height:200vh; pointer-events:none; opacity:0; transition:opacity 1.6s ease; z-index:8;
+  background:radial-gradient(calc(var(--u)*56) calc(var(--u)*32) at calc(50% + var(--u)*8) calc(50% + var(--u)*10),rgba(0,0,0,0) 0%,rgba(0,0,0,.42) 55%,rgba(0,0,0,.8) 100%)}
+.night .night-ov{opacity:1}
+.night .glow{background:radial-gradient(closest-side at 62% 52%,rgba(255,252,238,.5),rgba(255,252,238,.16) 45%,rgba(255,252,238,0) 100%)}
+.vig{position:absolute; inset:0; pointer-events:none; z-index:31; background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 42%,rgba(0,0,0,.42) 78%,rgba(0,0,0,.86) 100%)}
+.grain{position:absolute; inset:-120px; pointer-events:none; z-index:32; opacity:.16; background-image:var(--fgrain,none); animation:grain .7s steps(7) infinite}
+@keyframes grain{0%{transform:translate(0,0)}15%{transform:translate(-41px,23px)}30%{transform:translate(27px,-52px)}45%{transform:translate(-63px,-18px)}60%{transform:translate(38px,44px)}75%{transform:translate(-19px,61px)}90%{transform:translate(55px,-33px)}}
+.flick{position:absolute; inset:0; pointer-events:none; z-index:33; background:#000; opacity:0}
+.scratch{position:absolute; top:0; bottom:0; width:1px; pointer-events:none; z-index:33; background:linear-gradient(180deg,rgba(255,255,255,0),rgba(255,255,255,.4) 20%,rgba(255,255,255,.12) 60%,rgba(255,255,255,.4) 85%,rgba(255,255,255,0)); opacity:0}
+.speck{position:absolute; width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,.6); pointer-events:none; z-index:33; opacity:0}
+
+/* interface: engraved plates and subtitles */
+.top{position:absolute; left:0; right:0; top:0; z-index:40; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:max(12px,env(safe-area-inset-top)) 14px 0}
+.ttl{font:700 clamp(.62rem,1.25vw,.86rem)/1.3 var(--type); letter-spacing:.3em; color:#d9d5c8; text-shadow:0 1px 3px #000; margin:.4em 0 0}
+.ttl span{display:block; font-weight:400; letter-spacing:.2em; opacity:.6; font-size:.86em}
+.plates{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px}
+.plate{font:700 clamp(.56rem,1.05vw,.7rem)/1 var(--type); letter-spacing:.17em; color:#131313; padding:.78em 1.05em .66em; border:1px solid #070707; border-radius:2px; cursor:pointer; white-space:nowrap;
+  background:linear-gradient(180deg,#cdcdc7,#8d8d88 56%,#a8a8a2); box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 2px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.75); text-shadow:0 1px 0 rgba(255,255,255,.42)}
+.plate:active,.plate[aria-pressed="true"]{background:linear-gradient(180deg,#8a8a85,#a9a9a3); box-shadow:inset 0 2px 4px rgba(0,0,0,.6),0 1px 2px rgba(0,0,0,.6); transform:translateY(1px)}
+.bottom{position:absolute; left:0; right:0; bottom:max(12px,env(safe-area-inset-bottom)); z-index:40; display:flex; flex-direction:column; align-items:center; gap:9px; pointer-events:none; padding:0 12px}
+.subs{min-height:4.2em; max-width:min(92vw,46rem); text-align:center; opacity:0; transition:opacity .45s ease; text-shadow:0 2px 6px #000,0 0 18px #000}
+.subs.on{opacity:1}
+.subs .who{display:block; font:700 clamp(.56rem,1vw,.7rem)/1 var(--type); letter-spacing:.3em; color:#aaa79c; margin-bottom:.7em}
+.subs .say{font:italic clamp(1rem,2.1vw,1.5rem)/1.35 var(--serif); color:#f3f0e6}
+.status{pointer-events:auto; cursor:pointer; min-width:min(84vw,19rem); padding:.9em 2.2em .76em; border:1px solid #060606; border-radius:2px; position:relative;
+  font:700 clamp(.72rem,1.4vw,.95rem)/1 var(--type); letter-spacing:.3em; color:#101010;
+  background:linear-gradient(180deg,#d2d2cc,#90908b 55%,#adada7); box-shadow:inset 0 1px 0 rgba(255,255,255,.65),inset 0 -2px 3px rgba(0,0,0,.5),0 3px 10px rgba(0,0,0,.8); text-shadow:0 1px 0 rgba(255,255,255,.45)}
+.status::before,.status::after{content:""; position:absolute; top:50%; width:7px; height:7px; margin-top:-3.5px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#eee,#555 70%); box-shadow:inset 0 -1px 1px #000}
+.status::before{left:.7em} .status::after{right:.7em}
+.status.blink{animation:blink .9s steps(2) 3}
+@keyframes blink{50%{filter:brightness(1.5)}}
+.hint{margin:0; font:clamp(.56rem,1vw,.68rem)/1.3 var(--type); letter-spacing:.14em; color:#9c998f; text-align:center; text-shadow:0 1px 3px #000}
+
+/* title card */
+.card{position:fixed; inset:0; z-index:60; display:grid; place-items:center; background:radial-gradient(ellipse at center,#1c1c1c,#020202 75%); text-align:center; padding:24px; transition:opacity 1.6s ease,visibility 0s 1.6s}
+.card.gone{opacity:0; visibility:hidden}
+.card .in{border:1px solid #807d74; outline:1px solid #807d74; outline-offset:6px; padding:clamp(26px,6vw,64px) clamp(20px,7vw,84px); max-width:44rem}
+.card h1{margin:0; font:400 clamp(1.5rem,5.4vw,3.3rem)/1.1 var(--serif); letter-spacing:.18em; color:#eeeade}
+.card h2{margin:1em 0 0; font:italic 400 clamp(.95rem,2.2vw,1.35rem)/1.2 var(--serif); color:#b9b5a9; letter-spacing:.05em}
+.card .orn{margin:1.5em auto; width:8em; height:1px; background:#807d74; position:relative}
+.card .orn::after{content:""; position:absolute; left:50%; top:-3px; width:7px; height:7px; background:#020202; border:1px solid #807d74; transform:translateX(-50%) rotate(45deg)}
+.enter{cursor:pointer; background:none; border:1px solid #bdb9ad; padding:1em 2.2em .86em; font:700 clamp(.7rem,1.5vw,.9rem)/1 var(--type); letter-spacing:.34em; color:#eeeade; transition:background .3s,color .3s}
+.enter:hover{background:#e4dfd0; color:#0a0a0a}
+.card p{margin:1.6em 0 0; font:clamp(.6rem,1.15vw,.74rem)/1.7 var(--type); letter-spacing:.14em; color:#8b887f}
+
+/* the prompt, as a typed sheet */
+.brief{position:fixed; inset:0; z-index:70; display:grid; place-items:start center; overflow:auto; padding:5vh 14px; background:rgba(0,0,0,.88); opacity:0; visibility:hidden; transition:opacity .4s,visibility 0s .4s; -webkit-user-select:text; user-select:text}
+.brief.on{opacity:1; visibility:visible; transition:opacity .4s}
+.sheet{max-width:780px; width:100%; padding:clamp(22px,5vw,58px); color:#161616; font:400 .95rem/1.65 "Courier Prime","Courier New",monospace;
+  background-color:#d6d1c2; background-image:var(--pgrain,none),linear-gradient(175deg,#e0dbcc,#c2beb0); box-shadow:0 30px 70px #000}
+.sheet h2{margin:0; font:700 1.05rem/1.2 var(--type); letter-spacing:.3em}
+.sheet .by{margin:.6em 0 1.6em; padding-bottom:1.1em; border-bottom:1px solid #333; letter-spacing:.06em; color:#3a3a3a}
+.sheet .plate{float:right; margin:0 0 10px 14px}
+.sheet strong{font-weight:700}
+
+@media (orientation:portrait){
+  :root{--u:min(1.72vw,.98vh)}
+  .stage{width:calc(var(--u)*58); height:calc(var(--u)*100)}
+  .wall{height:calc(50% - var(--u)*9)} .desk{top:calc(50% - var(--u)*10)}
+  .window{--x:2; --y:9; --w:44; height:calc(var(--u)*28)} .cal{--x:49; --y:12; --w:7.4}
+  .spill{left:calc(var(--u)*-10); top:calc(var(--u)*40); width:calc(var(--u)*60)}
+  .lamp{--x:39; --y:17.5; --w:21} .glow{left:calc(var(--u)*-6); top:calc(var(--u)*24); width:calc(var(--u)*70); height:calc(var(--u)*56)} .cone{left:calc(var(--u)*20); top:calc(var(--u)*24); width:calc(var(--u)*34)}
+  .news{--x:-5; --y:38.5; --w:30} .docs{display:none} .ash{--x:26; --y:37.2; --w:9} .puff{left:calc(var(--u)*30.6); top:calc(var(--u)*37.2)}
+  .phone{--x:6; --y:36.5; --w:46}
+  .dir{--x:1; --y:80.5; --w:33} .dir .pg{min-height:0; padding:calc(var(--u)*.8)} .dir h2{font-size:calc(var(--u)*.9)} .ent .nm{font-size:calc(var(--u)*1.02)} .ent .nb{font-size:calc(var(--u)*.98)} .dir .foot{font-size:calc(var(--u)*.9)}
+  .pad{--x:37; --y:81.5; --w:19; min-height:calc(var(--u)*15)} .pad small{font-size:calc(var(--u)*.8)} .pad .ring{font-size:calc(var(--u)*1)}
+  .pen{--x:30; --y:98; --w:20}
+  .night-ov{background:radial-gradient(calc(var(--u)*48) calc(var(--u)*46) at 50% calc(50% + var(--u)*14),rgba(0,0,0,0) 0%,rgba(0,0,0,.34) 62%,rgba(0,0,0,.7) 100%)}
+  .bottom{bottom:auto; top:calc(50% + var(--u)*24.6)}
+  .subs{position:fixed; left:0; right:0; top:calc(50% - var(--u)*38.5); max-width:none; padding:0 14px; min-height:0}
+  .hint{position:fixed; left:0; right:0; top:calc(50% - var(--u)*45.5); padding:0 12px}
+  .status{padding:.74em 2em .62em; min-width:0}
+  .ttl span{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .grain,.puff,.glow,.cone,.window .fall{animation:none}
+  .puff{opacity:.18; transform:translate(0,calc(var(--u)*-8)) scale(1,1.6)}
+  .phone.shake{animation-duration:.4s}
+}
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="wall"></div>
+  <div class="desk"></div>
+  <div class="stage" id="stage">
+    <div class="o window">
+      <svg viewBox="0 0 360 240" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1a1a"/><stop offset=".6" stop-color="#3b3b3b"/><stop offset="1" stop-color="#5a5a58"/></linearGradient>
+          <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a8a86" stop-opacity="0"/><stop offset="1" stop-color="#8a8a86" stop-opacity=".62"/></linearGradient>
+          <filter id="wb"><feGaussianBlur stdDeviation="1.1"/></filter>
+        </defs>
+        <rect width="360" height="240" fill="url(#sky)"/>
+        <g filter="url(#wb)">
+          <path fill="#4c4c4a" d="M0,240V132h22v-14h18v-22h8v22h16v30h20V96h30v-18h6v18h12v40h26v-28h22v-12h20v12h14v44h22V88h10V70h6v18h20v60h18v-34h30v126Z"/>
+          <path fill="#333332" d="M0,240V160h34v-34h44v54h18v-70h14v-12h30v12h10v88h32v-52h46v40h22v-78h40v-10h14v10h8v90h48v64Z"/>
+          <rect x="0" y="120" width="360" height="120" fill="url(#fog)"/>
+          <path fill="#1b1b1b" d="M0,240V196h58v-58h66v84h60v-40h26v-52h70v70h34v-28h46v68Z"/>
+          <g fill="#8d8d87" opacity=".5"><rect x="104" y="112" width="4" height="6"/><rect x="118" y="126" width="4" height="6"/><rect x="232" y="100" width="4" height="6"/><rect x="246" y="118" width="4" height="6"/><rect x="40" y="140" width="4" height="6"/><rect x="330" y="150" width="4" height="6"/><rect x="174" y="150" width="4" height="6"/></g>
+          <g id="oppLamp" style="transition:opacity 1.2s"><rect x="232" y="146" width="9" height="13" fill="#f4f1e6"/><rect x="226" y="140" width="21" height="25" fill="#f4f1e6" opacity=".2"/></g>
+          <g fill="#55554f"><rect x="72" y="152" width="8" height="12"/><rect x="92" y="152" width="8" height="12"/><rect x="72" y="176" width="8" height="12"/><rect x="252" y="146" width="9" height="13"/><rect x="232" y="170" width="9" height="13"/></g>
+        </g>
+        <rect width="360" height="240" fill="url(#fog)" opacity=".5"/>
+      </svg>
+      <div class="fall"></div>
+      <canvas id="rain" width="360" height="240" aria-hidden="true"></canvas>
+      <div class="bolt"></div><div class="bars"></div>
+    </div>
+    <div class="o cal" aria-hidden="true">1939<b>2</b>SEPTEMBER</div>
+    <div class="spill"></div>
+
+    <div class="o news paper flat" aria-hidden="true">
+      <h3>The Continental Dispatch</h3>
+      <div class="dt"><span>LATE EDITION</span><span>SATURDAY, SEPTEMBER 2, 1939</span><span>PRICE ONE PENNY</span></div>
+      <h4>FRONTIER CLOSED AT MIDNIGHT</h4>
+      <h5>Trunk lines to the Continent delayed four hours. Night trains crowded.</h5>
+      <div class="cols"></div>
+    </div>
+    <div class="o docs flat" aria-hidden="true"><i class="paper"></i><i class="paper"></i></div>
+
+    <div class="o lamp" aria-hidden="true">
+      <svg viewBox="0 0 220 300">
+        <defs>
+          <linearGradient id="lmp" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0c0c0c"/><stop offset=".35" stop-color="#5a5a58"/><stop offset=".5" stop-color="#9a9a96"/><stop offset=".7" stop-color="#2d2d2c"/><stop offset="1" stop-color="#090909"/></linearGradient>
+          <radialGradient id="bulb"><stop offset="0" stop-color="#fffdf2"/><stop offset=".5" stop-color="#f3f0e2" stop-opacity=".85"/><stop offset="1" stop-color="#f3f0e2" stop-opacity="0"/></radialGradient>
+          <filter id="lb"><feGaussianBlur stdDeviation="5"/></filter>
+        </defs>
+        <ellipse cx="150" cy="282" rx="66" ry="12" fill="#000" opacity=".7" filter="url(#lb)"/>
+        <path d="M96,276c0-22 24-34 54-34s54,12 54,34c0,10-108,10-108,0z" fill="url(#lmp)"/>
+        <ellipse cx="150" cy="277" rx="54" ry="9" fill="#101010"/>
+        <path d="M150,246C152,170 176,112 124,78" fill="none" stroke="#070707" stroke-width="11" stroke-linecap="round"/>
+        <path d="M150,246C152,170 176,112 124,78" fill="none" stroke="url(#lmp)" stroke-width="7" stroke-linecap="round"/>
+        <g transform="rotate(-24 104 74)">
+          <ellipse cx="104" cy="112" rx="60" ry="28" fill="url(#bulb)" filter="url(#lb)"/>
+          <path d="M44,104L78,42q26-14 52,0l34,62q-60,16-120,0z" fill="url(#lmp)"/>
+          <path d="M78,42q26-14 52,0l-6,-10q-20-8-40,0z" fill="#1d1d1c"/>
+          <ellipse cx="104" cy="104" rx="60" ry="10" fill="#f6f3e6"/>
+          <ellipse cx="104" cy="104" rx="60" ry="10" fill="none" stroke="#111" stroke-width="2.5"/>
+          <ellipse cx="104" cy="106" rx="20" ry="6" fill="#fff"/>
+          <path d="M150,104v44" stroke="#8d8d88" stroke-width="1.2" stroke-dasharray="1.6 1.6"/><circle cx="150" cy="150" r="3" fill="#aaa"/>
+        </g>
+      </svg>
+    </div>
+    <div class="o ash" aria-hidden="true">
+      <svg viewBox="0 0 100 44">
+        <ellipse cx="50" cy="32" rx="46" ry="11" fill="#000" opacity=".6"/>
+        <ellipse cx="50" cy="26" rx="44" ry="13" fill="#2e2e2d" stroke="#8c8c88" stroke-width="1.2"/>
+        <ellipse cx="50" cy="25" rx="34" ry="8.5" fill="#121212" stroke="#5c5c5a" stroke-width=".8"/>
+        <path d="M30,21l34,-9 2.2,3.6 -34,9z" fill="#dcd9cd"/><path d="M30,21l9,-2.4 2.2,3.6 -9,2.4z" fill="#8f8c82"/><circle cx="65.4" cy="13.8" r="2.3" fill="#f7f5ec"/>
+      </svg>
+    </div>
+    <div class="puff" style="--d:0s"></div><div class="puff" style="--d:-2.4s"></div><div class="puff" style="--d:-4.9s"></div><div class="puff" style="--d:-7.1s"></div><div class="puff" style="--d:-9.2s"></div>
+
+    <div class="o phone" id="phone">
+      <svg viewBox="0 0 640 520" role="group" aria-label="Bellcroft 39 rotary telephone">
+        <defs>
+          <linearGradient id="gFront" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b2b2b"/><stop offset=".4" stop-color="#151515"/><stop offset="1" stop-color="#040404"/></linearGradient>
+          <linearGradient id="gSide" x1="0" y1="0" x2="1" y2=".4"><stop offset="0" stop-color="#151515"/><stop offset=".45" stop-color="#3d3d3c"/><stop offset="1" stop-color="#101010"/></linearGradient>
+          <linearGradient id="gTop" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2a2a2a"/><stop offset=".7" stop-color="#6a6a68"/><stop offset="1" stop-color="#3a3a39"/></linearGradient>
+          <linearGradient id="gBar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5c5c5a"/><stop offset=".3" stop-color="#1f1f1f"/><stop offset="1" stop-color="#040404"/></linearGradient>
+          <linearGradient id="gCup" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0a0a0a"/><stop offset=".55" stop-color="#2c2c2c"/><stop offset=".8" stop-color="#5d5d5b"/><stop offset="1" stop-color="#161616"/></linearGradient>
+          <linearGradient id="gSteel" gradientUnits="userSpaceOnUse" x1="-90" y1="-80" x2="90" y2="90"><stop offset="0" stop-color="#f4f4f1"/><stop offset=".22" stop-color="#8f8f8c"/><stop offset=".4" stop-color="#e2e2de"/><stop offset=".58" stop-color="#6c6c6a"/><stop offset=".78" stop-color="#cfcfcb"/><stop offset="1" stop-color="#4c4c4a"/></linearGradient>
+          <radialGradient id="gPlate" gradientUnits="userSpaceOnUse" cx="-20" cy="-30" r="150"><stop offset="0" stop-color="#f0ecdf"/><stop offset=".7" stop-color="#c9c5b7"/><stop offset="1" stop-color="#8d8a80"/></radialGradient>
+          <radialGradient id="gWell" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="116"><stop offset=".86" stop-color="#000"/><stop offset=".93" stop-color="#3a3a3a"/><stop offset="1" stop-color="#0c0c0c"/></radialGradient>
+          <filter id="b2" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2"/></filter>
+          <filter id="b6" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6"/></filter>
+          <filter id="b14" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="14"/></filter>
+          <mask id="wm" maskUnits="userSpaceOnUse" x="-110" y="-110" width="220" height="220"><g id="wheelM"><circle r="100" fill="#fff"/><g id="holesM" fill="#000"></g></g></mask>
+        </defs>
+        <ellipse cx="336" cy="474" rx="300" ry="30" fill="#000" opacity=".75" filter="url(#b14)"/>
+        <!-- line cord running off the back of the desk -->
+        <path d="M120,452C70,440 30,446 -60,424" fill="none" stroke="#050505" stroke-width="7" stroke-linecap="round"/>
+        <path d="M120,452C70,440 30,446 -60,424" fill="none" stroke="#3b3b3a" stroke-width="4" stroke-dasharray="2 3.4" stroke-linecap="round"/>
+        <!-- plinth -->
+        <path d="M94,452L90,472Q90,482 104,482L434,490Q448,490 456,486L550,450Q560,446 556,432L552,424L446,462Z" fill="#030303"/>
+        <path d="M92,470Q92,480 104,480L434,488Q446,488 454,484L550,448" fill="none" stroke="#5a5a58" stroke-width="1.2" opacity=".6"/>
+        <!-- body: right side, front, top -->
+        <path d="M446,462L412,216Q409,205 418,200L456,182Q468,178 472,190L552,424Q556,436 544,440L452,474Q448,476 446,462Z" fill="url(#gSide)"/>
+        <path d="M104,468Q88,468 94,452L190,212Q196,198 212,198L392,202Q408,203 412,216L446,462Q448,476 432,476Z" fill="url(#gFront)"/>
+        <path d="M212,198Q200,198 214,192L250,178Q256,176 266,176L450,178Q464,178 456,182L418,200Q410,203 392,202Z" fill="url(#gTop)"/>
+        <!-- bakelite sheen -->
+        <path d="M444,226L512,410" stroke="#fff" stroke-width="20" opacity=".1" filter="url(#b6)" fill="none" stroke-linecap="round"/>
+        <path d="M430,214L466,330" stroke="#fff" stroke-width="3" opacity=".3" filter="url(#b2)" fill="none" stroke-linecap="round"/>
+        <path d="M214,199L392,203" stroke="#fff" stroke-width="1.6" opacity=".45" fill="none"/>
+        <path d="M100,450L193,214" stroke="#fff" stroke-width="4" opacity=".12" filter="url(#b2)" fill="none"/>
+        <path d="M206,216L388,220L396,262L190,256Z" fill="#fff" opacity=".05" filter="url(#b6)"/>
+        <path d="M120,456L426,464" stroke="#fff" stroke-width="2" opacity=".09" filter="url(#b2)"/>
+        <text x="272" y="462" font-family="Georgia,serif" font-size="12" letter-spacing="7" fill="#4a4a48" text-anchor="middle" transform="rotate(1.4 272 462)">BELLCROFT</text>
+        <!-- cradle saddle and back prongs -->
+        <path d="M222,192L234,152Q237,144 248,144L424,148Q434,148 437,156L448,192Z" fill="#101010"/>
+        <path d="M236,152Q238,146 248,146L424,150" stroke="#8a8a87" stroke-width="1.2" fill="none" opacity=".7"/>
+        <path d="M236,152Q232,120 243,115Q255,113 257,127L260,152Z" fill="#1c1c1c"/>
+        <path d="M408,154Q408,122 419,118Q431,117 433,130L437,156Z" fill="#2d2d2c"/>
+        <!-- hook-switch plungers -->
+        <g id="plungers"><rect x="293" y="136" width="11" height="15" rx="3" fill="#9c9c98" stroke="#111"/><rect x="361" y="138" width="11" height="15" rx="3" fill="#9c9c98" stroke="#111"/></g>
+        <path d="M284,148h30v6h-30zM352,150h30v6h-30z" fill="#060606"/>
+
+        <!-- dial -->
+        <g id="dial" transform="translate(298 346) rotate(1.4) scale(1 .9)">
+          <circle r="116" fill="url(#gWell)"/>
+          <circle r="104" fill="url(#gPlate)"/>
+          <g id="nums" font-family="Georgia,serif" font-weight="700" font-size="19" fill="#0d0d0d" text-anchor="middle"></g>
+          <circle r="104" fill="none" stroke="#000" stroke-width="5" opacity=".5"/>
+          <g mask="url(#wm)">
+            <circle r="100" fill="url(#gSteel)"/>
+            <g id="brush" stroke="#000" opacity=".1" fill="none"></g>
+            <circle r="99" fill="none" stroke="#fff" stroke-width="1.6" opacity=".6"/>
+          </g>
+          <g id="wheel">
+            <g id="holesR"></g>
+            <circle r="47" fill="#1b1b1b"/><circle r="47" fill="none" stroke="url(#gSteel)" stroke-width="5"/>
+            <circle r="40" fill="url(#gPlate)"/>
+            <path id="arcT" d="M-29,0A29,29 0 0 1 29,0" fill="none"/>
+            <text font-family="Georgia,serif" font-size="9.5" letter-spacing="2.4" fill="#151515" text-anchor="middle"><textPath href="#arcT" startOffset="50%">BELLCROFT</textPath></text>
+            <text y="9" font-family="Georgia,serif" font-weight="700" font-size="22" fill="#151515" text-anchor="middle">39</text>
+            <text y="22" font-family="'Courier New',monospace" font-size="6.6" letter-spacing="1" fill="#2a2a2a" text-anchor="middle">HOLBROOK 2051</text>
+            <ellipse cx="-12" cy="-16" rx="22" ry="10" fill="#fff" opacity=".22" transform="rotate(-30 -12 -16)"/>
+          </g>
+          <!-- finger stop -->
+          <g transform="rotate(45)">
+            <path d="M120,-8L72,-5.5C63,-5 61,5 70,5.5L120,9Z" fill="#000" opacity=".45" transform="translate(2 5)" filter="url(#b2)"/>
+            <path d="M120,-8L72,-5.5C63,-5 61,5 70,5.5L120,9Z" fill="url(#gSteel)" stroke="#222" stroke-width=".8"/>
+            <path d="M116,-5L74,-3" stroke="#fff" stroke-width="1.4" opacity=".8"/>
+            <circle cx="112" cy="0" r="3.2" fill="#555" stroke="#111"/>
+          </g>
+          <g id="holesH"></g>
+        </g>
+
+        <!-- cord from the body to the handset -->
+        <g id="cord" fill="none" stroke-linecap="round">
+          <path class="cp" stroke="#030303" stroke-width="10"/><path class="cp" stroke="#262626" stroke-width="7.4"/>
+          <path class="cp" stroke="#575755" stroke-width="7" stroke-dasharray="1.8 4.2" opacity=".75"/><path class="cp" stroke="#9a9a96" stroke-width="2" stroke-dasharray="1.2 4.8" opacity=".5" transform="translate(-1.4 -1.4)"/>
+        </g>
+        <circle cx="538" cy="424" r="8" fill="#060606" stroke="#4a4a48"/>
+
+        <!-- handset -->
+        <g id="handset" tabindex="0" role="button" aria-label="Receiver. Press to lift it or put it back.">
+          <g id="hsShadow"><path d="M148,172C232,140 420,142 502,174" stroke="#000" stroke-width="26" fill="none" opacity=".5" filter="url(#b6)"/></g>
+          <path d="M100,146C98,124 172,118 178,142L184,196C180,222 106,224 100,198Z" fill="url(#gCup)"/>
+          <path d="M466,144C474,120 548,128 548,150L550,200C546,226 472,224 466,198Z" fill="url(#gCup)"/>
+          <path d="M146,140C230,100 420,102 500,142L506,180C420,150 232,148 142,178Z" fill="url(#gBar)"/>
+          <path d="M160,134C240,98 410,100 488,136" stroke="#fff" stroke-width="3" fill="none" opacity=".5" filter="url(#b2)"/>
+          <path d="M170,131C246,102 404,104 478,133" stroke="#fff" stroke-width="1" fill="none" opacity=".55"/>
+          <ellipse cx="142" cy="202" rx="41" ry="14" fill="#050505" stroke="#6a6a68" stroke-width="1.4"/>
+          <ellipse cx="142" cy="203" rx="30" ry="9.5" fill="#161616" stroke="#000"/>
+          <g fill="#000"><circle cx="142" cy="203" r="2"/><circle cx="130" cy="203" r="1.7"/><circle cx="154" cy="203" r="1.7"/><circle cx="136" cy="198.6" r="1.6"/><circle cx="148" cy="198.6" r="1.6"/><circle cx="136" cy="207.4" r="1.6"/><circle cx="148" cy="207.4" r="1.6"/></g>
+          <ellipse cx="508" cy="205" rx="41" ry="14" fill="#050505" stroke="#6a6a68" stroke-width="1.4"/>
+          <ellipse cx="508" cy="206" rx="31" ry="10" fill="#1a1a1a" stroke="#000"/>
+          <g fill="#000"><circle cx="508" cy="206" r="2.2"/><circle cx="496" cy="206" r="1.8"/><circle cx="520" cy="206" r="1.8"/><circle cx="502" cy="201.4" r="1.7"/><circle cx="514" cy="201.4" r="1.7"/><circle cx="502" cy="210.6" r="1.7"/><circle cx="514" cy="210.6" r="1.7"/></g>
+          <path d="M106,150C108,134 160,128 172,142" stroke="#fff" stroke-width="2" fill="none" opacity=".28" filter="url(#b2)"/>
+          <path d="M474,146C482,130 534,134 542,150" stroke="#fff" stroke-width="2" fill="none" opacity=".4" filter="url(#b2)"/>
+          <path d="M540,152L544,198" stroke="#fff" stroke-width="2.4" fill="none" opacity=".3" filter="url(#b2)"/>
+          <rect class="hfocus" x="88" y="92" width="472" height="140" rx="20" fill="none" stroke="#f1eee4" stroke-width="2" stroke-dasharray="6 6" opacity="0"/>
+          <rect x="96" y="96" width="456" height="132" fill="rgba(0,0,0,.001)"/>
+        </g>
+        <!-- front prongs of the cradle -->
+        <g id="prongs" pointer-events="none">
+          <path d="M222,176Q216,138 229,133Q242,131 245,146L252,178Z" fill="#232323"/><path d="M225,170Q222,142 231,137" stroke="#8d8d8a" stroke-width="1.4" fill="none" opacity=".6"/>
+          <path d="M414,180Q412,142 425,137Q438,136 441,150L450,182Z" fill="#3a3a39"/><path d="M436,150L446,180" stroke="#b5b5b1" stroke-width="1.6" fill="none" opacity=".6"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="o dir" id="dir" aria-label="Telephone directory">
+      <div class="pg"><h2>TELEPHONE NUMBERS</h2><div id="dirA"></div></div>
+      <div class="pg"><h2>CITY EXCHANGE</h2><div id="dirB"></div><p class="foot">Operator: dial 0 and wait.</p></div>
+    </div>
+    <div class="o pad paper" id="pad" aria-live="polite">
+      <small>TO RING</small><div class="ring" id="padRing">&nbsp;</div>
+      <small>DIALLED</small><div class="num" id="padNum"></div><div class="old" id="padOld"></div>
+    </div>
+    <div class="o pen" aria-hidden="true">
+      <svg viewBox="0 0 300 30"><defs><linearGradient id="pn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a6a68"/><stop offset=".3" stop-color="#1a1a1a"/><stop offset="1" stop-color="#030303"/></linearGradient><linearGradient id="nb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3f3ef"/><stop offset="1" stop-color="#777"/></linearGradient></defs>
+        <path d="M58,6h214q14,2 22,9q-8,7-22,9H58q-6-9 0-18z" fill="url(#pn)"/><path d="M8,15L58,8v14z" fill="url(#nb)" stroke="#222" stroke-width=".6"/><path d="M12,15h34" stroke="#222" stroke-width=".8"/><circle cx="44" cy="15" r="1.6" fill="#222"/>
+        <rect x="56" y="5.4" width="7" height="19.2" fill="url(#nb)"/><rect x="166" y="5" width="8" height="20" fill="url(#nb)"/><path d="M174,5.4h70v3h-70z" fill="url(#nb)" opacity=".8"/><path d="M70,9h90" stroke="#fff" stroke-width="1" opacity=".4"/>
+      </svg>
+    </div>
+    <div class="night-ov"></div>
+    <div class="glow"></div><div class="cone"></div>
+  </div>
+
+  <div class="roomflash"></div>
+  <div class="vig"></div><div class="grain"></div><div class="flick" id="flick"></div>
+  <div class="scratch" id="sc1"></div><div class="scratch" id="sc2"></div><div class="speck" id="sp1"></div><div class="speck" id="sp2"></div>
+
+  <div class="top">
+    <p class="ttl">THE LAST CONNECTION<span>A TELEPHONE FROM 1939</span></p>
+    <div class="plates">
+      <button class="plate" id="bSound" type="button" aria-pressed="false">SOUND ON</button>
+      <button class="plate" id="bNight" type="button" aria-pressed="false">NIGHT MODE</button>
+      <button class="plate" id="bCall" type="button">INCOMING CALL</button>
+      <button class="plate" id="bBrief" type="button">THE PROMPT</button>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="subs" id="subs" aria-live="polite"><span class="who" id="who"></span><span class="say" id="say"></span></div>
+    <button class="status" id="status" type="button">LIFT RECEIVER</button>
+    <p class="hint" id="hint">PRESS THE RECEIVER TO LIFT IT</p>
+  </div>
+</div>
+
+<div class="card" id="card">
+  <div class="in">
+    <h1>THE LAST CONNECTION</h1>
+    <h2>A Telephone from 1939</h2>
+    <div class="orn"></div>
+    <button class="enter" id="enter" type="button">ENTER THE OFFICE</button>
+    <p>SOUND BEGINS WHEN YOU ENTER.<br>LIFT THE RECEIVER, THEN TURN THE DIAL TO THE STOP.</p>
+  </div>
+</div>
+
+<div class="brief" id="brief" role="dialog" aria-modal="true" aria-label="The prompt" aria-hidden="true">
+  <div class="sheet">
+    <button class="plate" id="briefClose" type="button">CLOSE</button>
+    <h2>THE PROMPT</h2>
+    <p class="by">Given to Claude Fable 5.2 as written. This page is the result.</p>
+    <div id="briefBody"></div>
+  </div>
+</div>
+
+<script type="text/plain" id="promptSrc">
+Build **"The Last Connection — A Telephone from 1939"**, an immersive, interactive vintage telephone experience set in a dimly lit European office between 1935 and 1940, inspired by classic black-and-white wartime cinema. The centerpiece is a fictional telephone, the **"Bellcroft 39"**, a large, heavy, black Bakelite rotary-dial desk telephone with a curved handset, braided cloth cord, polished metal finger stop, circular numbered dial, and beautifully aged mechanical details.
+
+**Visual design:** The entire experience should resemble a frame from a 1930s black-and-white film, using a strictly monochromatic palette of charcoal black, silver-gray, faded ivory, and smoky white. A realistic three-quarter illustrated telephone (SVG with layered gradients, metallic reflections, subtle shadows, and detailed mechanical components) sits prominently on an old wooden desk. Surround it with period-appropriate objects: a folded 1939 newspaper, handwritten telephone directory, fountain pen, scattered documents, and a softly glowing desk lamp. In the background, show a shadowy office window with rain streaking down the glass, faint silhouettes of buildings, and atmospheric fog. Add subtle film grain, occasional scratches, gentle flickering light, soft vignetting, and cinematic shadows to create the feeling of a forgotten wartime movie scene.
+
+**Rotary dialing interaction:** The telephone must feature a fully functional, historically accurate rotary dial with digits 0–9 arranged in the traditional circular layout. Users should physically rotate the dial using mouse dragging or touchscreen gestures. When a finger hole is selected, the dial rotates clockwise toward the mechanical finger stop, then automatically returns counterclockwise at a realistic mechanical speed. Each digit produces its corresponding number of pulse clicks (1–9 pulses for digits 1–9, and 10 pulses for 0). The dial should never behave like a modern push-button keypad. Users can also type digits on their physical keyboard to trigger the same rotary dialing animation. Display the dialed number on a small handwritten notepad beside the telephone.
+
+**Handset interaction:** Users can click or tap the handset to lift it from its cradle. Animate the handset rising naturally, the braided cord stretching slightly, and the hook-switch buttons releasing. Once lifted, play an authentic vintage telephone dial tone. Allow users to dial a fictional telephone number. After dialing, simulate the mechanical switching process with subtle clicks, pauses, distant line noises, and an old-fashioned ringing tone. When the call connects, transition to an atmospheric fictional 1939 telephone conversation, such as a railway station operator, a hotel receptionist, a newspaper office, or a mysterious late-night caller. Use short, period-appropriate dialogue displayed as cinematic subtitles, accompanied by synthesized telephone-filtered audio effects where possible.
+
+**Sound design:** Use the Web Audio API to synthesize authentic mechanical rotary clicks, dial return sounds, handset pickup and placement noises, hook-switch clicks, telephone ringing, busy signals, faint electrical hum, and crackling analog line static. Audio should activate only after the user's first interaction. Include a clearly visible mute/unmute toggle. Avoid modern DTMF touch-tone sounds during rotary dialing, since the experience is set before touch-tone telephones existed.
+
+**Cinematic atmosphere:** Introduce subtle environmental motion: drifting cigarette smoke, rain sliding down the window, occasional distant lightning illuminating the room, and gentle changes in the desk lamp's brightness. Keep all animations restrained, atmospheric, and believable. The telephone should remain the visual and interactive focus. Add a subtle black-and-white film projector effect with irregular frame flicker and fine-grained noise, without making text or controls difficult to read.
+
+**Additional interactive features:** Include a small vintage telephone directory containing several fictional contacts with period-appropriate exchange names and numbers. Users can select a contact to reveal its number and manually dial it. Provide an interactive "Incoming Call" feature that makes the telephone ring and gently vibrate on the desk until the handset is lifted. Add a "Hang Up" interaction that returns the handset to its cradle, stops the call audio, and resets the telephone line. Include a "Night Mode" option that darkens the room and emphasizes the desk lamp's cinematic lighting. Allow users to switch between different fictional call scenarios without leaving the scene.
+
+**Typography and interface:** Use period-appropriate typography with serif and typewriter-style fonts such as "American Typewriter", "Courier Prime", "Courier New", and Georgia. All interface labels should feel like they belong to a 1939 telephone exchange. Use restrained text such as "LIFT RECEIVER", "DIAL NUMBER", "LINE ENGAGED", "CONNECTING", and "REPLACE RECEIVER". Avoid modern-looking buttons, glossy UI panels, bright accent colors, and contemporary dashboard layouts. Integrate controls naturally into paper labels, engraved metal plates, or objects on the desk.
+
+**Animation and realism:** The telephone must feel like a real physical object rather than a flat illustration. Use smooth mechanical animations, accurate rotary-dial geometry, realistic spring-driven return timing, subtle handset movement, responsive pointer interactions, and carefully layered SVG components. The dial must respond continuously to dragging on both desktop and mobile. Keep the entire experience responsive, with the telephone, notepad, and essential controls visible and usable on smaller screens.
+
+**Overall experience:** Make the user feel as though they have stepped into a forgotten office in 1939, sitting alone beside a heavy black telephone while rain falls outside and an unexpected call arrives. The experience should be nostalgic, mysterious, cinematic, and tactile — a fully interactive mechanical telephone simulation presented as a living scene from a classic black-and-white wartime film. Prioritize immersive visual storytelling, historically accurate dialing mechanics, authentic sound design, and polished interactive details over unnecessary interface elements.
+</script>
+
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s),NS='http://www.w3.org/2000/svg';
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const scene=$('#scene'),phone=$('#phone');
+
+/* ---------- procedural textures ---------- */
+const svgUrl=s=>`url("data:image/svg+xml,${encodeURIComponent(s)}")`,rs=document.documentElement.style;
+rs.setProperty('--wood',svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='900' height='500'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.004 .3' numOctaves='3' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.5 -.55'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`));
+rs.setProperty('--pgrain',svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .1 0 0 0 .5 -.14'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`));
+(()=>{const c=document.createElement('canvas');c.width=c.height=220;const g=c.getContext('2d'),im=g.createImageData(220,220);
+  for(let i=0;i<48400;i++){const v=Math.random()*255|0;im.data[i*4]=im.data[i*4+1]=im.data[i*4+2]=v;im.data[i*4+3]=Math.random()*150}
+  g.putImageData(im,0,0);rs.setProperty('--fgrain',`url(${c.toDataURL()})`)})();
+
+/* ---------- dial geometry: 1 nearest the stop, then round anticlockwise to 0 ---------- */
+const HR=76,holeAng=n=>-30*n,dialG=$('#dial'),wheel=$('#wheel'),wheelM=$('#wheelM');
+{
+  let m='',r='',h='',nums='',br='';
+  for(let n=1;n<=10;n++){const a=holeAng(n)*Math.PI/180,x=(HR*Math.cos(a)).toFixed(2),y=(HR*Math.sin(a)).toFixed(2);
+    m+=`<circle cx="${x}" cy="${y}" r="14.6"/>`;
+    r+=`<circle cx="${x}" cy="${y}" r="15.4" fill="none" stroke="#000" stroke-width="2.6" opacity=".7"/><circle cx="${x}" cy="${y}" r="16.8" fill="none" stroke="#fff" stroke-width="1" opacity=".5"/><path d="M${(+x-10).toFixed(1)},${(+y-9).toFixed(1)}a14.6,14.6 0 0 1 20,0" fill="none" stroke="#000" stroke-width="4" opacity=".4"/>`;
+    h+=`<circle class="hole" data-n="${n}" cx="${x}" cy="${y}" r="17"><title>${n%10}</title></circle>`;
+    nums+=`<text x="${x}" y="${(+y+6.6).toFixed(2)}">${n%10}</text>`}
+  for(let i=0;i<72;i++){const a=i*5*Math.PI/180;br+=`<path d="M${(50*Math.cos(a)).toFixed(1)},${(50*Math.sin(a)).toFixed(1)}L${(99*Math.cos(a)).toFixed(1)},${(99*Math.sin(a)).toFixed(1)}"/>`}
+  $('#holesM').innerHTML=m;$('#holesR').innerHTML=r;$('#holesH').innerHTML=h;$('#nums').innerHTML=nums;$('#brush').innerHTML=br;
+}
+const D={rot:0,mode:'idle',max:0,pulses:0,left:0,next:0,queue:[],prev:0,tick:0,hold:0,n:0};
+const setRot=r=>{D.rot=r;const t=`rotate(${r.toFixed(2)})`;wheel.setAttribute('transform',t);wheelM.setAttribute('transform',t);$('#holesH').setAttribute('transform',t)};
+function ptAngle(e){const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(dialG.getScreenCTM().inverse());return{a:Math.atan2(p.y,p.x)*180/Math.PI,r:Math.hypot(p.x,p.y),x:p.x,y:p.y}}
+dialG.addEventListener('pointerdown',e=>{
+  if(D.mode!=='idle')return;const p=ptAngle(e);let best=0,bd=1e9;
+  for(let n=1;n<=10;n++){const a=holeAng(n)*Math.PI/180,d=Math.hypot(p.x-HR*Math.cos(a),p.y-HR*Math.sin(a));if(d<bd){bd=d;best=n}}
+  if(bd>19)return;e.preventDefault();wake();
+  D.mode='drag';D.n=best;D.max=30*(best+1);D.prev=p.a;D.tick=0;D.pid=e.pointerId;dialG.setPointerCapture(e.pointerId);phone.classList.add('dragging');
+});
+dialG.addEventListener('pointermove',e=>{
+  if(D.mode!=='drag'||e.pointerId!==D.pid)return;const p=ptAngle(e);if(p.r<12)return;
+  let d=p.a-D.prev;d=((d+540)%360)-180;D.prev=p.a;
+  const r=Math.max(0,Math.min(D.max,D.rot+d));
+  if(r>D.rot&&Math.floor(r/12)>Math.floor(D.rot/12))snd.ratchet();
+  if(r>=D.max&&D.rot<D.max)snd.stop();
+  setRot(r);
+});
+const release=e=>{
+  if(D.mode!=='drag'||(e&&e.pointerId!==D.pid))return;phone.classList.remove('dragging');
+  /* the dial sends one pulse for every 30 degrees it travels back past the contacts */
+  const p=Math.max(0,Math.min(10,Math.floor((D.rot+6)/30)-1));
+  if(D.rot<8){D.mode='return';D.pulses=D.left=0;flashHint('TURN THE DIAL ROUND TO THE STOP')}
+  else startReturn(p);
+};
+dialG.addEventListener('pointerup',release);dialG.addEventListener('pointercancel',release);
+function startReturn(p){D.mode='return';D.pulses=D.left=p;D.next=30*p+15;D.hold=performance.now()+70;snd.whirr(true)}
+function autoDial(n){D.mode='auto';D.n=n;D.max=30*(n+1);D.tick=0}
+function dialStep(dt,now){
+  if(D.mode==='auto'){const r=Math.min(D.max,D.rot+dt*(170+260*Math.sin(Math.min(1,D.rot/D.max)*Math.PI)));
+    if(Math.floor(r/12)>Math.floor(D.rot/12))snd.ratchet();setRot(r);if(r>=D.max){snd.stop();startReturn(D.n);D.hold=now+110}}
+  else if(D.mode==='return'&&now>=D.hold){
+    const r=Math.max(0,D.rot-dt*300);                       /* governor: ten pulses a second */
+    while(D.left>0&&r<=D.next){snd.pulse();D.left--;D.next-=30}
+    setRot(r);
+    if(r<=0){snd.whirr(false);snd.stop(.5);D.mode='idle';if(D.pulses>0)onDigit(D.pulses%10);if(D.queue.length)autoDial(D.queue.shift())}
+  }
+}
+addEventListener('keydown',e=>{
+  if(brief.classList.contains('on')){if(e.key==='Escape')setBrief(false);return}
+  if(!entered||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(/^[0-9]$/.test(e.key)){const n=e.key==='0'?10:+e.key;wake();if(D.mode==='idle')autoDial(n);else if(D.queue.length<8)D.queue.push(n);e.preventDefault()}
+});
+
+/* ---------- handset, hook switch and cord ---------- */
+const hs=$('#handset'),cordPaths=[...document.querySelectorAll('.cp')];
+let off=false,hp=0,hv=0;
+function handsetStep(now){
+  const target=off?1:0;hv+=(target-hp)*.085;hv*=.76;hp+=hv;if(Math.abs(target-hp)<.0005&&Math.abs(hv)<.0005){hp=target;hv=0}
+  const p=hp,fl=off&&!reduce?Math.sin(now/900)*2.2*p:0,tx=-34*p,ty=-118*p+fl-Math.sin(Math.min(1,Math.max(0,p))*Math.PI)*16,ang=-17*p+(off&&!reduce?Math.sin(now/1300)*.7*p:0);
+  hs.setAttribute('transform',`translate(${tx.toFixed(2)} ${ty.toFixed(2)}) rotate(${ang.toFixed(2)} 324 152)`);
+  $('#hsShadow').setAttribute('opacity',Math.max(0,1-p*1.6).toFixed(2));
+  $('#plungers').setAttribute('transform',`translate(0 ${(-8*Math.min(1,Math.max(0,p*2.4))).toFixed(2)})`);
+  /* cord: from the socket on the body to the transmitter end, losing its slack as it stretches */
+  const a=ang*Math.PI/180,cx=324,cy=152,lx=514-cx,ly=218-cy,hx=cx+lx*Math.cos(a)-ly*Math.sin(a)+tx,hy=cy+lx*Math.sin(a)+ly*Math.cos(a)+ty,ax=538,ay=424;
+  const sag=150-92*p,d=`M${ax},${ay}C${(ax+62-20*p).toFixed(1)},${(ay+34-30*p).toFixed(1)} ${(hx+58-30*p).toFixed(1)},${(hy+sag).toFixed(1)} ${hx.toFixed(1)},${hy.toFixed(1)}`;
+  for(const c of cordPaths)c.setAttribute('d',d);
+}
+function lift(){
+  if(off)return;off=true;wake();snd.pickup();snd.line(true);
+  if(state==='ringing'){stopRing();const sc=INCOMING[incomingIx++%INCOMING.length];setState('talk',sc.title);later(()=>runScript(sc),900)}
+  else{setState('tone');snd.tone('dial')}
+}
+function hangUp(){
+  if(!off)return;off=false;clearAll();snd.silence();snd.line(false);snd.putdown();hideSub();
+  if(digits.length){$('#padOld').textContent=digits.join(' ');$('#padNum').innerHTML=''}digits=[];
+  const cb=callback;callback=false;setState('idle');
+  if(cb)later(()=>{if(state==='idle')ring()},6500);
+}
+const toggleHandset=()=>off?hangUp():lift();
+hs.addEventListener('click',e=>{toggleHandset();if(e.detail>0)hs.blur()});
+hs.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleHandset()}});
+$('#status').addEventListener('click',toggleHandset);
+
+/* ---------- the exchange: line states, directory and calls ---------- */
+const CONTACTS=[
+  {id:'rail',page:'A',name:'Central Terminus, enquiries',ex:'HOLBROOK',num:'2714',title:'CENTRAL TERMINUS',who:'ENQUIRIES CLERK',pitch:122,lines:[
+    'Central Terminus, enquiries.',
+    'The night express? Platform four, if she runs at all.',
+    'They have put soldiers on the boat train, you understand.',
+    'Departure is given as eleven forty. I should not trust the board.',
+    'If you mean to travel, sir, travel tonight.',
+    'Enquiries. Hello? Are you there?']},
+  {id:'hotel',page:'A',name:'Hotel Astoria Grand',ex:'MARCHMONT',num:'3906',title:'HOTEL ASTORIA GRAND',who:'RECEPTION',pitch:214,lines:[
+    'Astoria Grand, good evening.',
+    'Room three hundred and twelve? One moment, please.',
+    'I am afraid the gentleman left an hour ago. No luggage.',
+    'He left an envelope at the desk, to be collected.',
+    'It has your name on it. At least, I believe it is your name.',
+    'We shall keep it until midnight. Good night, sir.']},
+  {id:'paper',page:'A',name:'Evening Courier, night desk',ex:'FLEETGATE',num:'1939',title:'THE EVENING COURIER',who:'NIGHT EDITOR',pitch:104,lines:[
+    'Courier, night desk. Make it quick, we go to press at one.',
+    'Say that again. The frontier? When?',
+    'Hold the line. Stop the front page! Stop it!',
+    'Who gave you this? No. Not on an open wire.',
+    'Come to the side door. Bring nothing in writing.',
+    'And for God’s sake, use another telephone.']},
+  {id:'weiss',page:'B',name:'Dr. A. Weiss',ex:'KRONEN',num:'5183',gone:true},
+  {id:'vesper',page:'B',name:'V. (not after midnight)',ex:'VESPER',num:'0451',title:'VESPER 0451',who:'A VOICE',pitch:84,rate:.8,lampOut:true,lines:[
+    'You were told not to ring this number.',
+    'Listen carefully. I will say it once.',
+    'There is a lamp in the window opposite yours.',
+    'When it goes out, leave by the back stairs.',
+    'Leave the directory. Put the key under the blotter.',
+    'They are listening at the exchange. Say nothing more.']}
+];
+const OPERATOR={title:'EXCHANGE',who:'OPERATOR',pitch:232,callback:true,lines:[
+  'Number, please.',
+  'I am sorry, caller. All trunk lines to the Continent are engaged.',
+  'There is a delay of four hours on calls abroad.',
+  'I shall ring you back when a line is free.',
+  'Replace your receiver, please.']};
+const INCOMING=[
+  {title:'UNKNOWN CALLER',who:'A STRANGER',pitch:94,rate:.85,lines:[
+    'Is that Holbrook two-oh-five-one?',
+    'Do not speak. Only listen.',
+    'Your name was on a list. I have seen it.',
+    'There is a train at eleven forty. Platform four.',
+    'You have until the rain stops.']},
+  {title:'WRONG NUMBER',who:'A WOMAN',pitch:252,rate:1.1,lines:[
+    'Hello? Hello, is that the bakery?',
+    'Oh! I do beg your pardon.',
+    'The girl at the exchange has crossed the wires again.',
+    'Everything is at sixes and sevens tonight.',
+    'Good night to you. And do keep the blinds drawn.']},
+  {title:'THE EVENING COURIER',who:'MARLOWE',pitch:108,lines:[
+    'It is Marlowe, at the Courier. Do not hang up.',
+    'That story you telephoned in. It was true. Every word.',
+    'We print at one. After that you will not be safe in that office.',
+    'Burn the directory.']}
+];
+let state='idle',digits=[],timers=[],incomingIx=0,callback=false,ringTimer=0,selected=null;
+const later=(fn,ms)=>{const id=setTimeout(()=>{timers=timers.filter(t=>t!==id);fn()},ms);timers.push(id);return id};
+const clearAll=()=>{timers.forEach(clearTimeout);timers=[]};
+const LABEL={idle:['LIFT RECEIVER','PRESS THE RECEIVER TO LIFT IT'],ringing:['INCOMING CALL','LIFT THE RECEIVER TO ANSWER'],tone:['DIAL NUMBER','DRAG A FINGER HOLE ROUND TO THE STOP, OR TYPE THE FIGURES'],
+  dialing:['DIAL NUMBER','FOUR FIGURES. FOR THE OPERATOR DIAL 0 AND WAIT'],switching:['CONNECTING','THE SELECTORS ARE HUNTING FOR A LINE'],ringback:['CONNECTING','RINGING THE SUBSCRIBER'],
+  talk:['CONNECTED','LISTEN'],engaged:['LINE ENGAGED','REPLACE RECEIVER AND TRY AGAIN'],dead:['REPLACE RECEIVER','THE LINE IS DEAD'],unob:['NUMBER UNOBTAINABLE','REPLACE RECEIVER']};
+let hintLock=0;
+function setState(s,extra){state=s;const l=LABEL[s];$('#status').textContent=s==='talk'&&extra?extra:l[0];if(performance.now()>hintLock)$('#hint').textContent=l[1];
+  $('#status').setAttribute('aria-label',(off?'Replace receiver. ':'Lift receiver. ')+'Line: '+l[0])}
+function flashHint(t){$('#hint').textContent=t;hintLock=performance.now()+2600;const st=$('#status');st.classList.remove('blink');void st.offsetWidth;st.classList.add('blink');
+  setTimeout(()=>{if(performance.now()>=hintLock)$('#hint').textContent=LABEL[state][1]},2700)}
+function onDigit(d){
+  if(!off){flashHint('LIFT RECEIVER BEFORE DIALLING');return}
+  if(state!=='tone'&&state!=='dialing')return;
+  if(state==='tone'){snd.silence();$('#padOld').textContent='';setState('dialing')}
+  digits.push(d);const s=document.createElement('span');s.textContent=d;s.style.transform=`rotate(${rnd(-7,7).toFixed(1)}deg) translateY(${rnd(-2,2).toFixed(1)}px)`;s.style.marginRight='.18em';$('#padNum').appendChild(s);
+  clearAll();
+  if(digits.length>=4)connect(digits.join(''));
+  else if(digits.length===1&&d===0)later(()=>connect('0'),2600);
+  else later(()=>{setState('unob');snd.tone('unob')},9000);
+}
+function connect(num){
+  setState('switching');snd.switching();
+  const c=num==='0'?OPERATOR:CONTACTS.find(x=>x.num===num);
+  later(()=>{
+    if(!c){setState('unob');snd.tone('unob');return}
+    if(c.gone){setState('engaged');snd.tone('busy');return}
+    setState('ringback');snd.tone('ringback');
+    later(()=>{snd.silence();snd.click(.5);setState('talk',c.title);later(()=>runScript(c),700)},c===OPERATOR?3300:rnd(5600,6400));
+  },2300);
+}
+function runScript(c){
+  let i=0;callback=!!c.callback;
+  const next=()=>{
+    if(i>=c.lines.length){hideSub();if(c.lampOut)later(()=>$('#oppLamp').style.opacity='0',1400);
+      later(()=>{snd.click(.6);setState('dead');later(()=>snd.tone('unob',.25),1200)},900);return}
+    const t=c.lines[i++],dur=snd.speak(t,c.pitch,c.rate||1);
+    $('#who').textContent=c.who;$('#say').textContent='“'+t+'”';$('#subs').classList.add('on');
+    later(()=>{$('#subs').classList.remove('on');later(next,rnd(650,1100))},Math.max(dur,t.length*62,1900)+500);
+  };next();
+}
+const hideSub=()=>$('#subs').classList.remove('on');
+function ring(){
+  if(off||state==='ringing')return;setState('ringing');let n=0;
+  const burst=()=>{if(state!=='ringing')return;if(++n>10){stopRing();setState('idle');return}
+    snd.bell(.4);phone.classList.add('shake');setTimeout(()=>phone.classList.remove('shake'),400);
+    setTimeout(()=>{if(state==='ringing'){snd.bell(.4);phone.classList.add('shake');setTimeout(()=>phone.classList.remove('shake'),400)}},600);
+    ringTimer=setTimeout(burst,3000)};
+  burst();
+}
+function stopRing(){clearTimeout(ringTimer);phone.classList.remove('shake');snd.bellStop()}
+$('#bCall').addEventListener('click',()=>{wake();if(off)flashHint('REPLACE RECEIVER TO TAKE A CALL');else if(state==='ringing'){stopRing();setState('idle')}else ring()});
+
+/* directory */
+CONTACTS.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='ent'+(c.gone?' gone':'');
+  b.innerHTML=`<span class="nm">${esc(c.name)}</span><span class="nb">${c.ex} <u>····</u><b>${c.num}</b></span>`;
+  b.setAttribute('aria-label',`${c.name}. Show number.`);
+  b.addEventListener('click',()=>{document.querySelectorAll('.ent.sel').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');selected=c;
+    b.setAttribute('aria-label',`${c.name}, ${c.ex} ${c.num.split('').join(' ')}`);
+    $('#padRing').textContent=`${c.ex[0]}${c.ex.slice(1).toLowerCase()} ${c.num}`;if(!off)flashHint('LIFT RECEIVER, THEN DIAL '+c.num.split('').join(' '))});
+  $('#dir'+c.page).appendChild(b)});
+
+/* ---------- sound: everything is synthesised with the Web Audio API ---------- */
+const snd=(()=>{
+  let AC=null,master,room,lineIn,lineOut,noise,muted=false,toneNodes=[],toneTimer=0,voices=[],whirrG=null,crackT=0;
+  const N=()=>{const s=AC.createBufferSource();s.buffer=noise;s.loop=true;return s};
+  const G=(v,to)=>{const g=AC.createGain();g.gain.value=v;if(to)g.connect(to);return g};
+  const F=(type,f,q,to)=>{const b=AC.createBiquadFilter();b.type=type;b.frequency.value=f;if(q)b.Q.value=q;if(to)b.connect(to);return b};
+  function init(){
+    if(AC)return;const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;AC=new Ctx();
+    master=G(muted?0:1,AC.destination);room=G(.9,master);
+    noise=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    /* the receiver: a narrow carbon-microphone band with a little grit */
+    lineOut=G(0,master);const lp=F('lowpass',2900,.8,lineOut),ws=AC.createWaveShaper(),cv=new Float32Array(256);for(let i=0;i<256;i++){const x=i/128-1;cv[i]=Math.tanh(x*2.4)}ws.curve=cv;ws.connect(lp);
+    lineIn=F('highpass',340,.9,ws);
+    const hum=AC.createOscillator();hum.type='sawtooth';hum.frequency.value=50;hum.connect(G(.035,lineIn));hum.start();
+    const st=N();st.connect(F('bandpass',1500,.6,G(.03,lineIn)));st.start();
+    /* the room: rain on the glass and a mains hum */
+    const r1=N();r1.connect(F('bandpass',2400,.5,G(.05,room)));r1.start();
+    const r2=N();r2.connect(F('lowpass',420,.4,G(.07,room)));r2.start();
+    const h=AC.createOscillator();h.frequency.value=100;h.connect(G(.007,room));h.start();
+    crackle();
+  }
+  function crackle(){clearTimeout(crackT);crackT=setTimeout(()=>{if(AC&&lineOut.gain.value>.1)burst(lineIn,rnd(.05,.3),rnd(600,2600),1.5,rnd(.004,.02));crackle()},rnd(120,1500))}
+  function burst(to,vol,freq,q,dur,when=0,type='bandpass'){if(!AC)return;const t=AC.currentTime+when,s=N(),g=G(0,to);s.connect(F(type,freq,q,g));
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0008,t+dur);s.start(t,Math.random());s.stop(t+dur+.02)}
+  function thump(vol,f=110,dur=.09,when=0){if(!AC)return;const t=AC.currentTime+when,o=AC.createOscillator(),g=G(0,room);o.connect(g);o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.45,t+dur);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.start(t);o.stop(t+dur+.02)}
+  function ding(f,vol,dur,when=0){if(!AC)return;const t=AC.currentTime+when;[[1,1],[2.76,.55],[5.4,.28],[8.93,.1]].forEach(([m,a],i)=>{const o=AC.createOscillator(),g=G(0,room);o.frequency.value=f*m;o.connect(g);
+    g.gain.setValueAtTime(vol*a,t);g.gain.exponentialRampToValueAtTime(.0005,t+dur/(1+i*.7));o.start(t);o.stop(t+dur+.05)})}
+  let bellStopAt=0;
+  const api={
+    init,get on(){return!!AC},
+    mute(m){muted=m;if(AC)master.gain.setTargetAtTime(m?0:1,AC.currentTime,.03)},
+    resume(){if(AC&&AC.state==='suspended')AC.resume()},
+    line(on){if(AC)lineOut.gain.setTargetAtTime(on?.85:0,AC.currentTime,.04)},
+    click(v=.4){burst(lineIn,v,1400,.8,.012,0,'lowpass');burst(room,v*.25,3000,2,.008)},
+    ratchet(){burst(room,.05,rnd(3600,4600),3,.006)},
+    stop(v=1){burst(room,.16*v,1900,2,.014);thump(.12*v,150,.04)},
+    pulse(){burst(room,.2,3300,2.5,.011);burst(room,.1,1100,1.5,.02);burst(lineIn,.75,900,.7,.016,0,'lowpass')},
+    whirr(on){if(!AC)return;if(on&&!whirrG){const s=N(),lfo=AC.createOscillator(),lg=G(.02);whirrG=G(.045,room);s.connect(F('bandpass',760,1.4,whirrG));lfo.type='square';lfo.frequency.value=41;lfo.connect(lg);lg.connect(whirrG.gain);s.start();lfo.start();whirrG._s=[s,lfo]}
+      else if(!on&&whirrG){const g=whirrG;whirrG=null;g.gain.setTargetAtTime(0,AC.currentTime,.015);g._s.forEach(n=>n.stop(AC.currentTime+.1))}},
+    pickup(){thump(.3,120,.08);burst(room,.22,900,1.2,.03);burst(room,.14,2800,2,.012,.06);burst(room,.12,3200,2,.01,.1);ding(1640,.02,.5,.05);burst(lineIn,.6,1000,.7,.02,.08,'lowpass')},
+    putdown(){thump(.42,96,.11);burst(room,.3,800,1,.04);burst(room,.16,2600,2,.014,.05);burst(room,.12,3000,2,.01,.11);ding(1640,.03,.6,.03);ding(1980,.02,.5,.05)},
+    silence(){clearInterval(toneTimer);toneNodes.forEach(n=>{try{n.stop()}catch(e){}try{n.disconnect()}catch(e){}});toneNodes=[];voices.forEach(o=>{try{o.stop()}catch(e){}});voices=[];api.whirr(false)},
+    tone(kind,vol=1){
+      if(!AC)return;api.silence();const g=G(0,lineIn),t=AC.currentTime,osc=(f,type='sine',v=1)=>{const o=AC.createOscillator();o.type=type;o.frequency.value=f;o.connect(G(v,g));o.start();toneNodes.push(o);return o};
+      toneNodes.push(g);
+      if(kind==='dial'){osc(133,'sawtooth',.5);osc(400,'sine',.16);const l=AC.createOscillator(),lg=G(.05);l.frequency.value=33.3;l.connect(lg);lg.connect(g.gain);l.start();toneNodes.push(l);g.gain.setTargetAtTime(.22*vol,t,.05)}   /* a low purr, as on a 1930s exchange */
+      else if(kind==='unob'){osc(400,'sine',.6);g.gain.setTargetAtTime(.16*vol,t,.05)}
+      else{osc(400,'sine',.5);if(kind==='ringback'){osc(450,'sine',.5);const l=AC.createOscillator(),lg=G(.08);l.type='square';l.frequency.value=25;l.connect(lg);lg.connect(g.gain);l.start();toneNodes.push(l)}
+        const pat=kind==='busy'?[[0,.375]]:[[0,.4],[.6,.4]],per=kind==='busy'?.75:3;
+        const sched=()=>{const n=AC.currentTime+.02;pat.forEach(([a,d])=>{g.gain.setTargetAtTime(kind==='busy'?.2:.13,n+a,.008);g.gain.setTargetAtTime(0,n+a+d,.008)})};sched();toneTimer=setInterval(sched,per*1000)}
+    },
+    switching(){if(!AC)return;let t=.08;for(let s=0;s<4;s++){const k=3+Math.random()*7|0;for(let i=0;i<k;i++){burst(lineIn,rnd(.25,.6),rnd(700,1500),.8,.014,t,'lowpass');t+=rnd(.028,.045)}burst(lineIn,.5,400,.7,.05,t,'lowpass');t+=rnd(.2,.42)}
+      const s=N(),g=G(0,lineIn),f=F('bandpass',900,3,g);s.connect(f);const n=AC.currentTime;g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(.09,n+.9);g.gain.linearRampToValueAtTime(0,n+2.3);f.frequency.setValueAtTime(700,n);f.frequency.linearRampToValueAtTime(1700,n+2.2);s.start();s.stop(n+2.4)},
+    bell(dur){if(!AC)return;bellStopAt=AC.currentTime+dur;for(let i=0,t=0;t<dur;i++,t+=.04){ding(i%2?1720:1385,.085,.5,t);burst(room,.035,2400,3,.006,t)}},
+    bellStop(){},
+    /* a voice down the wire: a soft murmur, far off, so the cadence carries without words */
+    speak(text,pitch,rate=1){
+      const words=text.split(/\s+/).length,syl=Math.max(2,Math.round(words*1.5)),step=.165/rate,dur=syl*step+.25;if(!AC)return dur*1000;
+      const t0=AC.currentTime+.06,o=AC.createOscillator(),g=G(0,lineIn),f1=F('bandpass',500,2.2,g),f2=F('bandpass',1400,3,G(.45,g)),soft=F('lowpass',1000,.5);
+      o.type='sawtooth';o.connect(soft);soft.connect(f1);soft.connect(f2);
+      o.frequency.setValueAtTime(pitch*1.1,t0);f1.frequency.setValueAtTime(500,t0);f2.frequency.setValueAtTime(1400,t0);g.gain.setValueAtTime(.0001,t0);
+      let gap=2+(Math.random()*3|0);
+      for(let i=0;i<syl;i++){const ts=t0+i*step,fall=1.1-.2*i/syl,pk=rnd(.2,.3),last=i===syl-1||--gap===0;   /* syllables run together; a breath every few */
+        o.frequency.setTargetAtTime(pitch*(fall+rnd(-.04,.06)),ts,.04);
+        f1.frequency.linearRampToValueAtTime(rnd(360,720),ts+step*.5);f2.frequency.linearRampToValueAtTime(rnd(1050,1900),ts+step*.5);
+        g.gain.linearRampToValueAtTime(pk,ts+step*.35);g.gain.linearRampToValueAtTime(last?.0001:pk*.4,ts+step*.95);
+        if(last)gap=2+(Math.random()*4|0)}
+      o.start(t0);o.stop(t0+dur);voices.push(o);return dur*1000},
+    thunder(){if(!AC)return;const s=N(),g=G(0,room),f=F('lowpass',rnd(90,170),.6,g),n=AC.currentTime;s.connect(f);g.gain.setValueAtTime(0,n);g.gain.linearRampToValueAtTime(rnd(.5,.9),n+.25);g.gain.exponentialRampToValueAtTime(.4,n+.9);g.gain.exponentialRampToValueAtTime(.002,n+rnd(3,4.6));s.start();s.stop(n+5)}
+  };return api})();
+$('#bSound').addEventListener('click',e=>{const b=e.currentTarget,m=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',m);b.textContent=m?'SOUND OFF':'SOUND ON';snd.mute(m);wake()});
+function wake(){snd.resume()}
+
+/* ---------- atmosphere: rain on the glass, lightning, projector wear ---------- */
+const rc=$('#rain'),rx=rc.getContext('2d'),drops=[];
+for(let i=0;i<46;i++)drops.push({x:Math.random()*360,y:Math.random()*240,v:rnd(.35,2.3),ph:Math.random()*6,w:rnd(.6,1.7),stall:0});
+let rainFrame=0;
+function rainStep(){
+  if(++rainFrame%2)return;rx.globalCompositeOperation='destination-out';rx.fillStyle='rgba(0,0,0,.085)';rx.fillRect(0,0,360,240);rx.globalCompositeOperation='source-over';
+  for(const d of drops){if(d.stall>0){d.stall--;continue}if(Math.random()<.012)d.stall=rnd(10,60)|0;
+    const ox=d.x,oy=d.y;d.y+=d.v;d.x+=Math.sin(d.y*.045+d.ph)*.13;
+    rx.strokeStyle='rgba(225,225,220,.3)';rx.lineWidth=d.w;rx.beginPath();rx.moveTo(ox,oy);rx.lineTo(d.x,d.y);rx.stroke();
+    rx.fillStyle='rgba(250,250,245,.5)';rx.fillRect(d.x-d.w*.5,d.y,d.w,d.w*1.5);
+    if(d.y>244){d.y=-4;d.x=Math.random()*360;d.v=rnd(.35,2.3)}}
+}
+function lightning(){
+  if(!entered||document.hidden){setTimeout(lightning,4000);return}
+  if(!reduce){const f=(on,t)=>setTimeout(()=>scene.classList.toggle('flash',on),t);f(true,0);f(false,90);f(true,170);f(false,240);if(Math.random()<.5){f(true,420);f(false,470)}}
+  setTimeout(()=>snd.thunder(),rnd(700,2600));setTimeout(lightning,rnd(13000,34000));
+}
+const flick=$('#flick');
+function wear(){
+  if(!reduce&&!document.hidden){flick.style.opacity=Math.random()<.07?rnd(.07,.13):rnd(0,.035);
+    if(Math.random()<.035){const s=$(Math.random()<.5?'#sc1':'#sc2');s.style.left=rnd(3,97)+'%';s.style.opacity=rnd(.25,.7);setTimeout(()=>s.style.opacity=0,rnd(50,160))}
+    if(Math.random()<.05){const s=$(Math.random()<.5?'#sp1':'#sp2'),z=rnd(1.5,4.5);s.style.cssText=`left:${rnd(2,98)}%;top:${rnd(2,98)}%;width:${z}px;height:${z}px;opacity:${rnd(.3,.7)};background:${Math.random()<.5?'rgba(255,255,255,.7)':'rgba(0,0,0,.7)'}`;setTimeout(()=>s.style.opacity=0,70)}}
+  setTimeout(wear,82);
+}
+$('#bNight').addEventListener('click',e=>{const on=scene.classList.toggle('night');e.currentTarget.setAttribute('aria-pressed',on)});
+
+/* ---------- frame loop ---------- */
+let last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;dialStep(dt,now);handsetStep(now);rainStep();requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+
+/* ---------- entering the office ---------- */
+let entered=false;
+function enter(audio){
+  if(entered)return;entered=true;if(audio){snd.init();snd.resume()}$('#card').classList.add('gone');
+  setTimeout(lightning,rnd(5000,9000));wear();
+  /* the unexpected call */
+  setTimeout(()=>{if(state==='idle'&&!off&&!touched)ring()},21000);
+}
+let touched=false;
+['pointerdown','keydown'].forEach(ev=>scene.addEventListener(ev,()=>{touched=true},{passive:true}));
+$('#enter').addEventListener('click',()=>enter(true));
+
+/* ---------- the prompt sheet ---------- */
+const brief=$('#brief');
+$('#briefBody').innerHTML=$('#promptSrc').textContent.trim().split(/\n\s*\n/).map(p=>'<p>'+esc(p).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')+'</p>').join('');
+function setBrief(on){brief.classList.toggle('on',on);brief.setAttribute('aria-hidden',!on);(on?$('#briefClose'):$('#bBrief')).focus({preventScroll:true})}
+$('#bBrief').addEventListener('click',()=>setBrief(true));
+$('#briefClose').addEventListener('click',()=>setBrief(false));
+brief.addEventListener('click',e=>{if(e.target===brief)setBrief(false)});
+
+setState('idle');
+/* deep links used for previews: #enter, #lifted, #talk, #night, #ring, #prompt */
+const h=location.hash;
+if(/enter|lifted|talk|night|ring|prompt/.test(h)){enter(false);touched=true;
+  if(/night/.test(h))$('#bNight').click();
+  if(/lifted|talk/.test(h))lift();
+  if(/talk/.test(h)){hp=1;$('#dirA').children[1].click();[3,9,10,6].forEach((n,i)=>i?D.queue.push(n):autoDial(n))}
+  if(/ring/.test(h))ring();
+  if(/prompt/.test(h))setBrief(true)}
+})();
+</script>
+</body>
+</html>

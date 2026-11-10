@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herbarium Imaginarium</title>
+<meta name="description" content="A Victorian cabinet of procedurally grown plants that never existed. Built by Claude Fable 5.2 from one prompt, in one HTML file.">
+<style>
+:root{
+  --paper:#efe6d2; --ink:#4a3622; --g1:#6b7f4e; --g2:#9aa77a; --madder:#9c3b30; --brass:#b89857;
+  --serif:"Iowan Old Style",Palatino,"P052",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; min-height:100vh; font-family:var(--serif); color:#e6d6b0;
+  background-color:#24170e;
+  background-image:var(--wood,none),radial-gradient(120% 70% at 50% 0%,#4b3321 0%,#2c1d12 55%,#150d07 100%);
+  background-attachment:scroll,fixed;
+}
+button{font-family:inherit}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+/* cabinet heading */
+header{text-align:center; padding:clamp(26px,5vw,56px) 18px clamp(14px,2.4vw,26px)}
+.flourish{width:min(300px,62vw); height:auto; display:block; margin:0 auto 6px; opacity:.85}
+h1{
+  margin:0; font-weight:400; font-size:clamp(1.9rem,5.4vw,3.7rem); letter-spacing:.07em; line-height:1.08;
+  font-variant:small-caps; color:#dcc893;
+  text-shadow:0 -1px 0 rgba(0,0,0,.75),0 1px 0 rgba(255,232,180,.16),0 0 26px rgba(214,178,104,.12);
+}
+.sub{margin:.5em 0 0; font-style:italic; font-size:clamp(.98rem,1.9vw,1.25rem); color:#bda977; letter-spacing:.03em}
+.rule{display:flex; align-items:center; gap:14px; max-width:540px; margin:18px auto 22px; color:#8f7a4d}
+.rule::before,.rule::after{content:""; flex:1; height:3px; border-top:1px solid currentColor; border-bottom:1px solid rgba(143,122,77,.4)}
+.rule i{width:7px; height:7px; transform:rotate(45deg); border:1px solid currentColor}
+
+.plate{
+  position:relative; cursor:pointer; font-size:clamp(.72rem,1.3vw,.84rem); letter-spacing:.2em; text-transform:uppercase;
+  color:#2c1f0e; padding:.95em 2.7em; border:1px solid #57411f; border-radius:3px;
+  background:linear-gradient(180deg,#cdb274 0%,#b0914f 42%,#8e7039 100%);
+  box-shadow:inset 0 1px 0 rgba(255,241,202,.6),inset 0 -2px 4px rgba(58,38,8,.45),0 4px 10px rgba(0,0,0,.55);
+  text-shadow:0 1px 0 rgba(255,236,190,.55); transition:transform .25s,filter .25s,box-shadow .25s;
+}
+.plate::before,.plate::after{content:""; position:absolute; top:50%; width:6px; height:6px; margin-top:-3px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#e7d29a,#6d5426 70%); box-shadow:inset 0 -1px 1px rgba(0,0,0,.5)}
+.plate::before{left:.8em}.plate::after{right:.8em}
+.plate:hover{filter:brightness(1.07)}
+.plate:active{transform:translateY(1px); box-shadow:inset 0 2px 5px rgba(58,38,8,.6),0 2px 4px rgba(0,0,0,.5)}
+.plate[disabled]{filter:saturate(.5) brightness(.85); cursor:default}
+:focus-visible{outline:2px solid #ecd9a0; outline-offset:4px}
+
+/* tray and cards */
+.tray{
+  max-width:1200px; margin:0 auto; padding:clamp(16px,3vw,42px);
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(18px,3vw,44px);
+  background:linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.2));
+  box-shadow:inset 0 5px 26px rgba(0,0,0,.75),inset 0 0 0 1px rgba(0,0,0,.5),0 1px 0 rgba(255,222,170,.09);
+  border-radius:5px;
+}
+@media (max-width:980px){.tray{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:540px){.tray{grid-template-columns:minmax(0,1fr); max-width:420px}}
+.wrap{padding:0 clamp(10px,2.5vw,30px)}
+
+.card{
+  position:relative; container-type:inline-size; transform:rotate(var(--rot,0deg));
+  filter:drop-shadow(0 5px 8px rgba(0,0,0,.55));
+  transition:transform .55s cubic-bezier(.2,.7,.2,1),filter .55s,opacity .5s;
+}
+.card:hover,.card:has(:focus-visible){transform:translateY(-6px) rotate(calc(var(--rot,0deg)*.35)); filter:drop-shadow(0 18px 20px rgba(0,0,0,.6))}
+.card:has(:focus-visible){outline:2px solid #ecd9a0; outline-offset:7px}
+.card.leaving{opacity:0; transform:translateY(16px) rotate(calc(var(--rot,0deg) - 1.5deg))}
+.card.arriving{animation:arrive .8s cubic-bezier(.2,.7,.2,1)}
+@keyframes arrive{from{opacity:0; transform:translateY(-14px) rotate(calc(var(--rot,0deg) + 1.2deg))}}
+
+.sheet{
+  display:block; width:100%; margin:0; border:0; padding:5cqw 5cqw 4.4cqw; color:var(--ink); text-align:left;
+  clip-path:var(--deckle); position:relative; font-family:var(--serif);
+  background-color:var(--paper);
+  background-image:var(--fox,none),var(--crease,none),
+    radial-gradient(125% 95% at 50% 46%,rgba(255,252,240,.5) 0%,rgba(239,230,210,0) 45%,rgba(176,134,72,.3) 100%),
+    var(--fibre,none),var(--grainp,none);
+}
+button.sheet{cursor:zoom-in; outline:none}
+.illus{position:relative}
+.pl{display:block; width:100%; height:auto; overflow:visible}
+
+/* plant ink */
+.st{fill:none; stroke:var(--ink); stroke-linecap:round; stroke-linejoin:round}
+.lf-o,.pt-o{fill:none; stroke:var(--ink); stroke-width:.7; stroke-linejoin:round; transition:stroke-opacity 1.1s,stroke-width 1.1s}
+.lf-v,.pt-v{fill:none; stroke:var(--ink); stroke-width:.38; stroke-opacity:.8; stroke-linecap:round; transition:opacity 1.1s}
+.lf-h,.ht{fill:none; stroke:var(--ink); stroke-width:.3; stroke-opacity:.6; stroke-linecap:round; transition:opacity 1.1s}
+.lf-f{opacity:.8; transform:translate(.9px,.6px); transition:transform 1.1s,opacity 1.1s}
+.pt-f{opacity:.92; transition:opacity 1.1s}
+.ct,.bry{stroke:var(--ink); stroke-width:.6}
+.hl{fill:none; stroke:#f8efd9; stroke-width:.6; stroke-linecap:round; opacity:.85}
+.dot{fill:var(--ink)}
+.pop{transition:transform 1.1s cubic-bezier(.3,.6,.3,1)}
+.plant{filter:saturate(1) sepia(0) brightness(1) drop-shadow(0 0 0 rgba(60,40,20,0)); transition:filter 1.2s ease,opacity 1.2s ease}
+.note{font-family:var(--serif); font-style:italic; font-size:8.6px; fill:var(--ink); opacity:.66}
+.note.red{fill:var(--madder); opacity:.74; font-size:9.4px}
+.tp{fill:rgba(228,211,166,.8); stroke:rgba(110,86,48,.4); stroke-width:.4}
+.tp-s{fill:rgba(56,36,14,.24)}
+.tp-l{stroke:rgba(255,250,232,.5); stroke-width:.8; fill:none}
+.tp-d{fill:rgba(150,112,58,.2)}
+.tape{transition:opacity .9s ease,transform .9s ease}
+.fresh .tape{opacity:0; transform:translateY(-5px)}
+.fresh .lab,.fresh .stamp,.fresh .note{opacity:0}
+.lab,.stamp,.note{transition:opacity 1.4s ease}
+
+/* pressed state */
+.pressed .plant{filter:saturate(.38) sepia(.55) brightness(.97) drop-shadow(.7px 1.1px .6px rgba(58,38,16,.5)); opacity:.88}
+.pressed .lf-f{transform:translate(0,0); opacity:.5}
+.pressed .pt-f{opacity:.62}
+.pressed .lf-o,.pressed .pt-o{stroke-opacity:.55; stroke-width:.5}
+.pressed .lf-v,.pressed .pt-v{opacity:.5}
+.pressed .lf-h,.pressed .ht{opacity:.25}
+.pressed .pop{transform:scale(1.08,.9)}
+.illus::after{content:""; position:absolute; inset:-2%; pointer-events:none; opacity:0;
+  background:radial-gradient(60% 55% at 50% 50%,rgba(120,84,40,.13),rgba(120,84,40,0) 70%); transition:opacity 1.4s}
+.pressed .illus::after{opacity:1}
+.blot{position:absolute; inset:0; pointer-events:none; opacity:0; background:var(--fibre,none),#f3ecdb; z-index:3}
+.pressing .blot{animation:blot 1.25s ease}
+@keyframes blot{0%{opacity:0; transform:translateY(-10px) scale(1.02)}35%{opacity:.93; transform:none}62%{opacity:.93}100%{opacity:0; transform:translateY(-6px)}}
+
+/* growth */
+.grow .st,.grow .lf-o{stroke-dasharray:1 2; animation:draw var(--t,.6s) linear var(--d,0s) backwards}
+.grow .lf-o{animation-timing-function:ease-out}
+.grow .lf-f,.grow .lf-v,.grow .lf-h{animation:fadein .9s ease calc(var(--d,0s) + .45s) backwards}
+.grow .fade{animation:fadein .9s ease var(--d,0s) backwards}
+.grow .pop{animation:pop 1s cubic-bezier(.2,.8,.3,1) var(--d,0s) backwards}
+@keyframes draw{from{stroke-dashoffset:1.03}}
+@keyframes fadein{from{opacity:0}}
+@keyframes pop{from{opacity:0; transform:scale(.12)}}
+
+/* label */
+.lab{
+  position:relative; margin-top:2.5cqw; padding:2.6cqw 3cqw 2.2cqw; border:1px solid rgba(74,54,34,.6);
+  outline:1px solid rgba(74,54,34,.28); outline-offset:2px; background:rgba(252,247,233,.5); line-height:1.25;
+}
+.lab-h{font-size:clamp(7px,2.5cqw,11px); letter-spacing:.3em; text-transform:uppercase; text-align:center; opacity:.72;
+  padding-bottom:1.3cqw; margin-bottom:1.5cqw; border-bottom:1px solid rgba(74,54,34,.35)}
+.lab-n{font-style:italic; font-size:clamp(14px,6.3cqw,27px); letter-spacing:.01em}
+.lab-l{font-style:italic; font-size:clamp(10px,3.5cqw,15px); opacity:.82; margin-top:.5cqw}
+.lab-d{font-size:clamp(10px,3.5cqw,15px); margin-top:.4cqw}
+.lab-f{display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-top:1.6cqw; padding-top:1.3cqw; border-top:1px solid rgba(74,54,34,.35);
+  font-size:clamp(7.5px,2.55cqw,11px); letter-spacing:.17em; text-transform:uppercase}
+.stamp{position:absolute; right:3.5cqw; top:3.5cqw; width:17cqw; height:17cqw; opacity:.4; transform:rotate(var(--srot,-12deg)); pointer-events:none}
+.stamp text{font-size:8.4px; letter-spacing:.2em; fill:var(--madder); font-family:var(--serif)}
+.stamp circle{fill:none; stroke:var(--madder)}
+.tab{
+  position:absolute; right:7cqw; bottom:-1px; font-size:clamp(8px,2.5cqw,10.5px); letter-spacing:.24em; text-transform:uppercase;
+  color:var(--ink); background:#e3d6b6; border:1px solid rgba(74,54,34,.5); border-bottom:0; padding:.42em 1em .32em; opacity:0;
+  transform:translateY(5px); transition:opacity .4s,transform .4s; border-radius:2px 2px 0 0;
+}
+.card:hover .tab,.card:has(:focus-visible) .tab{opacity:.95; transform:none}
+@media (hover:none){.tab{opacity:.8; transform:none}}
+
+/* lightbox */
+.lb{
+  position:fixed; inset:0; z-index:50; overflow:auto; display:grid; place-items:center; padding:18px 14px;
+  background:radial-gradient(62% 56% at 50% 40%,rgba(255,212,146,.2),rgba(10,6,3,.9) 78%),rgba(12,7,3,.82);
+  opacity:0; visibility:hidden; transition:opacity .5s ease,visibility 0s .5s;
+}
+.lb.on{opacity:1; visibility:visible; transition:opacity .5s ease}
+.lb-card{
+  container-type:inline-size; width:min(94vw,calc((100vh - 60px)*1.06),1010px); filter:drop-shadow(0 26px 40px rgba(0,0,0,.7));
+  transform:translateY(18px) rotate(-.7deg) scale(.975); opacity:0; transition:transform .7s cubic-bezier(.2,.7,.2,1),opacity .55s ease;
+}
+.lb.on .lb-card{transform:none; opacity:1}
+.lb-sheet{display:grid; grid-template-columns:minmax(0,1fr) minmax(190px,29%); gap:3cqw; padding:3cqw; align-items:stretch}
+.lb-sheet .illus{touch-action:none; cursor:crosshair; overflow:hidden}
+.lb-sheet .illus.noloupe{cursor:default; touch-action:auto}
+.lb-side{display:flex; flex-direction:column; gap:14px; min-width:0}
+.lb-side .lab{margin-top:0; padding:14px 14px 12px}
+.lb-side .lab-h{font-size:10px; padding-bottom:7px; margin-bottom:8px}
+.lb-side .lab-n{font-size:clamp(20px,2.7cqw,28px)}
+.lb-side .lab-l,.lb-side .lab-d{font-size:14px; margin-top:3px}
+.lb-side .lab-f{font-size:9.5px; margin-top:9px; padding-top:7px}
+.lb-side .stamp{position:static; width:74px; height:74px; align-self:flex-end; margin:-4px 6px -12px 0}
+.det{margin:0; font-size:13.5px; line-height:1.5}
+.det dt{font-size:9.5px; letter-spacing:.22em; text-transform:uppercase; opacity:.66; margin-top:7px}
+.det dd{margin:0; font-style:italic}
+.ctl{margin-top:auto; display:flex; flex-wrap:wrap; gap:8px}
+.ptab{
+  flex:1 1 auto; cursor:pointer; font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink);
+  padding:.8em 1em .7em; border:1px solid rgba(74,54,34,.62); border-radius:2px; background:linear-gradient(180deg,#f0e6cd,#dccfae);
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 2px 3px rgba(60,40,15,.25); transition:transform .2s,background .3s,box-shadow .2s;
+}
+.ptab:hover{background:linear-gradient(180deg,#f6eeda,#e3d6b6)}
+.ptab:active,.ptab[aria-pressed="true"]{transform:translateY(1px); box-shadow:inset 0 2px 4px rgba(60,40,15,.35); background:linear-gradient(180deg,#d9cba8,#e6dabb)}
+.ptab:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+.hint{font-size:11.5px; font-style:italic; opacity:.6; margin:0}
+@media (max-width:760px){
+  .lb{place-items:start center}
+  .lb-card{width:min(94vw,520px)}
+  .lb-sheet{grid-template-columns:minmax(0,1fr); padding:5cqw}
+}
+
+/* loupe */
+.loupe{position:absolute; left:0; top:0; width:var(--D,150px); height:var(--D,150px); pointer-events:none; opacity:0; transition:opacity .3s; will-change:transform; z-index:4}
+.loupe.on{opacity:1}
+.loupe-h{position:absolute; left:83%; top:83%; width:46%; height:13%; transform-origin:0 50%; transform:rotate(45deg); border-radius:3px 8px 8px 3px;
+  background:linear-gradient(180deg,#6b4a2a,#2f1d0e 60%,#4a321b); box-shadow:0 4px 8px rgba(0,0,0,.4)}
+.loupe-h::before{content:""; position:absolute; left:0; top:-8%; bottom:-8%; width:22%; border-radius:2px; background:linear-gradient(180deg,#e2cd92,#8e7039)}
+.glass{
+  position:absolute; inset:0; border-radius:50%; overflow:hidden; background-color:var(--paper);
+  background-image:radial-gradient(120% 120% at 50% 50%,rgba(255,252,240,.5),rgba(190,150,90,.25));
+  box-shadow:0 0 0 2px #4f3a1a,0 0 0 6px #b89857,0 0 0 7px #d9c184,0 0 0 9px #8a6c36,0 0 0 10px #3c2a10,0 14px 26px rgba(0,0,0,.5);
+}
+.lw{position:absolute; inset:0; border-radius:50%; overflow:hidden}
+.lw svg{position:absolute; left:0; top:0; max-width:none; will-change:transform}
+.lw1 svg{filter:blur(.7px)}
+.lw2{background-color:var(--paper); background-image:radial-gradient(120% 120% at 50% 50%,rgba(255,252,240,.5),rgba(190,150,90,.25))}
+.lw2{-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 60%,transparent 71%); mask-image:radial-gradient(circle at 50% 50%,#000 60%,transparent 71%)}
+.glass::after{content:""; position:absolute; inset:0; border-radius:50%;
+  background:radial-gradient(42% 30% at 30% 20%,rgba(255,255,255,.5),rgba(255,255,255,0) 70%),
+    radial-gradient(circle at 50% 50%,rgba(255,255,255,0) 58%,rgba(60,40,10,.2) 86%,rgba(30,18,4,.48) 100%),
+    radial-gradient(70% 60% at 72% 84%,rgba(255,246,220,.2),rgba(255,255,255,0) 60%);
+  box-shadow:inset 0 0 14px rgba(40,24,6,.5)}
+
+/* footer and the prompt sheet */
+footer{text-align:center; padding:30px 18px 44px; color:#a8956a; font-size:.9rem; font-style:italic}
+footer p{margin:.3em 0}
+.linkish{background:none; border:0; padding:0; font:inherit; color:#dcc893; text-decoration:underline; text-underline-offset:3px; cursor:pointer}
+.brief{position:fixed; inset:0; z-index:60; display:grid; place-items:start center; overflow:auto; padding:5vh 14px; background:rgba(10,6,3,.86);
+  opacity:0; visibility:hidden; transition:opacity .4s,visibility 0s .4s}
+.brief.on{opacity:1; visibility:visible; transition:opacity .4s}
+.brief-sheet{max-width:760px; width:100%; padding:clamp(22px,5vw,54px); color:var(--ink); background-color:var(--paper);
+  background-image:radial-gradient(120% 90% at 50% 40%,rgba(255,252,240,.5),rgba(176,134,72,.22)),var(--fibre,none),var(--grainp,none);
+  box-shadow:0 30px 60px rgba(0,0,0,.6); font-size:1rem; line-height:1.62}
+.brief-sheet h2{font-weight:400; font-variant:small-caps; letter-spacing:.08em; font-size:1.5rem; margin:0 0 .2em}
+.brief-sheet .by{font-style:italic; opacity:.75; margin:0 0 1.4em; padding-bottom:1em; border-bottom:1px solid rgba(74,54,34,.4)}
+.brief-sheet code{font-family:"Courier New",monospace; font-size:.9em; background:rgba(74,54,34,.1); padding:0 .25em}
+.brief-sheet .ptab{float:right; margin:0 0 10px 14px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important; animation-delay:0s!important; transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="ink" x="-4%" y="-4%" width="108%" height="108%">
+    <feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="7" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="2.1" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<header>
+  <svg class="flourish" viewBox="0 0 300 40" fill="none" stroke="#a48b54" stroke-width="1" stroke-linecap="round" aria-hidden="true">
+    <path d="M150 34c0-12-9-22-22-22-9 0-15 6-15 13 0 6 4 10 9 10 4 0 7-3 7-6M150 34c0-12 9-22 22-22 9 0 15 6 15 13 0 6-4 10-9 10-4 0-7-3-7-6"/>
+    <path d="M110 22C92 10 66 12 48 20 34 26 20 26 6 18M190 22c18-12 44-10 62-2 14 6 28 6 42-2"/>
+    <path d="M78 14c-4-6-12-8-18-4 6 2 12 4 18 4zM222 14c4-6 12-8 18-4-6 2-12 4-18 4zM150 4c-4 5-4 10 0 15 4-5 4-10 0-15z" fill="#a48b54" fill-opacity=".35"/>
+  </svg>
+  <h1>Herbarium Imaginarium</h1>
+  <p class="sub">An Archive of Flora Never Found</p>
+  <div class="rule"><i></i></div>
+  <button class="plate" id="collect" type="button">Collect a New Specimen</button>
+</header>
+
+<div class="wrap"><main class="tray" id="tray" aria-label="Specimen collection"></main></div>
+<p class="vh" id="live" aria-live="polite"></p>
+
+<footer>
+  <p>Every plant here is grown by an L-system from a numeric seed. None of them exist.</p>
+  <p>Built by Claude Fable 5.2 from one prompt, in one HTML file. <button class="linkish" id="briefBtn" type="button">Read the prompt</button></p>
+</footer>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Specimen examination" aria-hidden="true">
+  <div class="lb-card"><div class="sheet lb-sheet" id="lbSheet"></div></div>
+</div>
+
+<div class="brief" id="brief" role="dialog" aria-modal="true" aria-label="The prompt" aria-hidden="true">
+  <div class="brief-sheet">
+    <button class="ptab" id="briefClose" type="button">Close</button>
+    <h2>The prompt</h2>
+    <p class="by">Given to Claude Fable 5.2 as written. This page is the result.</p>
+    <div id="briefBody"></div>
+  </div>
+</div>
+
+<script type="text/plain" id="promptSrc">
+Design and build **"Herbarium Imaginarium — A Cabinet of Impossible Botanicals"**, an immersive, interactive Victorian botanical specimen collection featuring procedurally generated plants that have never existed in nature. The experience should feel like discovering a forgotten nineteenth-century naturalist's private herbarium — a beautifully preserved archive filled with delicate botanical illustrations, handwritten scientific notes, aged specimen papers, and mysterious fictional flora. Every plant should be unique, algorithmically grown, and presented with the meticulous elegance of antique botanical documentation.
+
+**Visual concept and atmosphere:** Create an authentic Victorian botanical specimen cabinet inspired by nineteenth-century natural history collections, antique botanical atlases, and archival herbarium sheets. The interface should resemble a collection of fragile specimens carefully mounted on aged paper and arranged inside a dark wooden archival cabinet. Use warm, muted colors, fine ink illustrations, elegant serif typography, subtle paper imperfections, and carefully balanced compositions. The entire experience should feel scholarly, mysterious, nostalgic, and handcrafted — as though the user is examining an extraordinary botanical collection assembled by an eccentric Victorian explorer.
+
+**Color palette:** Use aged parchment `#efe6d2` as the primary paper color, deep sepia ink `#4a3622` for botanical outlines and annotations, faded botanical greens `#6b7f4e` and `#9aa77a` for foliage, and restrained madder-red accents for seeds, berries, flower centers, and occasional handwritten markings. Introduce subtle variations of warm ivory, dusty olive, muted brown, faded burgundy, and antique brass. Avoid bright modern colors, glossy surfaces, harsh contrasts, or contemporary interface aesthetics. The palette should feel naturally faded by time, sunlight, and decades of careful preservation.
+
+**Aged paper craftsmanship:** Every specimen card should resemble an authentic archival herbarium sheet with slightly uneven edges, subtle discoloration, delicate paper fibers, and scattered foxing spots. Generate paper texture using layered radial gradients, low-opacity procedural noise, fine grain patterns, and irregular translucent stains. Add faint yellowing near the edges, occasional tiny creases, soft paper shadows, and gentle variations in surface tone. Keep the texture subtle enough that botanical drawings and handwritten labels remain clear and readable. The cards should feel physically tangible, as if made from thick nineteenth-century rag paper.
+
+**Procedural botanical generation:** Each specimen must be an entirely fictional plant generated using an **L-system or recursive branching algorithm** rather than selected from a fixed collection of illustrations. Create botanical structures with distinct stems, branches, leaves, buds, seed pods, berries, and occasional flowers. Introduce controlled randomness in branching angles, stem lengths, leaf spacing, leaf shapes, growth direction, flower placement, and overall symmetry. Use deterministic random seeds so every generated specimen maintains its identity when reopened, pressed, resized, or examined. Ensure that the resulting plants look botanically plausible yet subtly otherworldly, with unusual branching arrangements, unexpected leaf combinations, delicate spiral tendrils, and unfamiliar floral structures.
+
+**Botanical illustration style:** Render every plant as detailed SVG artwork with fine sepia outlines, subtle ink-like stroke variation, tapered branches, delicate leaf veins, and restrained watercolor-style fills. The illustrations should resemble precise Victorian scientific engravings rather than modern flat vector graphics. Use varied line thickness, slight irregularities, fine crosshatching where appropriate, and gentle changes in ink opacity to suggest hand-drawn botanical documentation. Leaves should have recognizable organic silhouettes, stems should taper naturally, and flowers should feature carefully constructed petals and centers. Maintain enough visual variety that no two specimens appear identical.
+
+**Specimen mounting:** Each plant should appear physically attached to its paper sheet using one or two narrow strips of aged archival paper tape crossing the lower stem or a suitable branch. The tape should have slightly translucent edges, subtle adhesive discoloration, and a soft shadow where it overlaps the illustration. Add delicate mounting details such as tiny paper folds, faint pressure marks, and occasional handwritten annotations. Keep the arrangement realistic and understated, as though the specimen has been carefully preserved by a meticulous botanist.
+
+**Scientific labels and invented taxonomy:** Every specimen must have a unique, believable **fictional Latin binomial name** generated from curated syllable lists and botanical-style word endings. The names should sound convincingly scientific without intentionally reproducing real plant species names. Present each name in elegant italic serif typography, accompanied by a fictional collection date, a sequential specimen number, and a small archival classification label. Use nineteenth-century-style dates and consistent formatting, such as "Specimen No. 0042" and "Collected 17 September 1876". Optionally include a short fictional collection location or habitat note, such as "Northern Mistwood" or "Along the Vale of Ashenbrook", to enrich the imaginary botanical world. Maintain stable metadata for each specimen throughout interactions.
+
+**Specimen gallery:** Display an elegantly arranged collection of **six botanical specimen cards** in a responsive grid. On desktop, use a balanced three-column, two-row layout with generous spacing and consistent card proportions. On tablets, adapt to two columns, and on narrow mobile screens, use one or two columns depending on available width. Each card should display its complete botanical illustration, paper mounting tape, invented Latin name, collection date, and specimen number. Preserve a calm archival aesthetic with carefully controlled whitespace, subtle card shadows, and a softly textured cabinet background.
+
+**Collect a new specimen:** Include a prominent but period-appropriate interaction labeled **"Collect a New Specimen"**. When activated, generate a completely new fictional plant with its own procedural structure, scientific name, collection date, and specimen number. Animate the plant growing naturally from its base, with stems extending first, branches emerging next, followed by leaves, buds, and flowers. Use SVG stroke-dasharray and stroke-dashoffset animations to create the impression of a botanical illustrator drawing the specimen stroke by stroke. The animation should feel deliberate, elegant, and organic rather than mechanical. Gradually reveal leaf fills and fine details after their supporting stems appear. Once the growth sequence finishes, display the mounting tape and handwritten label with subtle paper-like transitions. Add the new specimen to the collection while maintaining a six-card gallery, replacing the oldest visible specimen when necessary.
+
+**Specimen inspection and lightbox:** Clicking or tapping any specimen card should open a beautifully designed enlarged specimen view resembling a botanical sheet placed under a naturalist's examination lamp. The selected specimen should expand smoothly into a centered archival lightbox while the background darkens subtly. Display the complete plant illustration at a larger scale, preserving its original procedural structure, colors, label, date, and specimen number. Include a clear close control, support the Escape key, and allow users to return to the collection without losing any specimen data or interaction state.
+
+**Magnifying-loupe interaction:** Within the enlarged specimen view, provide an interactive magnifying glass that follows the user's pointer over the botanical illustration. The loupe should resemble a small Victorian optical instrument with a thin antique-brass rim, delicate glass reflections, and subtle magnification distortion. Magnify the exact region beneath the pointer so users can inspect fine leaf veins, ink strokes, branching structures, and flower details. Keep the magnification smooth and accurately aligned with the underlying SVG. On touchscreens, allow users to drag the loupe across the specimen or use a clearly accessible magnification control. The loupe should remain within the illustration boundaries and never obstruct essential navigation.
+
+**Pressed-flower transformation:** Add a tactile **"Press" / "Restore"** toggle to each enlarged specimen view. Activating "Press" should transform the plant into a flattened, preserved botanical specimen. Reduce color saturation, introduce slight translucency, compress the visual depth of leaves and petals, soften selected outlines, and create subtle overlapping shadows that suggest dried botanical material pressed between archival sheets. Flowers should appear more delicate and flattened, while leaves become slightly muted and papery. The transition should be smooth and visually convincing, preserving the plant's recognizable structure. Restoring the specimen should return it to its original illustrated appearance without regenerating the plant or changing its metadata.
+
+**Micro-interactions and motion:** Add restrained, elegant animations throughout the experience. Specimen cards may lift slightly on hover, casting a deeper paper shadow. Handwritten labels can fade into view during collection. The lightbox should open with a gentle archival-paper transition rather than a dramatic modern zoom. The magnifying loupe should follow movement smoothly, and the pressed-flower transformation should feel like a delicate physical change. Avoid excessive animation, bouncing interface elements, or distracting decorative effects. Every movement should reinforce the sense of examining a fragile historical collection.
+
+**Typography and ornamental details:** Use a refined Victorian serif font stack: **"Iowan Old Style", Palatino, "P052", Georgia, serif**. Render scientific names in elegant italics, specimen numbers in small uppercase or letterspaced text, and collection notes in a handwriting-inspired italic serif. Introduce thin ornamental rules, small archival stamps, delicate corner flourishes, subtle engraved headings, and understated botanical motifs. The main title **"Herbarium Imaginarium"** should appear as an elegant nineteenth-century collection heading, accompanied by a restrained subtitle such as *"An Archive of Flora Never Found"*. Keep the typography scholarly, atmospheric, and readable.
+
+**Interface and controls:** Integrate interactive controls naturally into the archival environment. Style buttons as small engraved labels, aged paper tabs, or antique catalog controls rather than modern glossy buttons. Provide clear actions for "Collect a New Specimen", "Examine", "Press", "Restore", and "Close". Ensure all controls work with mouse, touch, and keyboard input, with visible focus states and accessible labels. Avoid unnecessary dashboards, oversized navigation, floating toolbars, and unrelated interface elements. The specimen collection should remain the central visual focus.
+
+**Responsive behavior:** The experience must work beautifully across desktop, tablet, and mobile screens. Preserve the elegance of the specimen gallery while adapting card dimensions, typography, and spacing naturally. On portrait mobile screens, ensure botanical illustrations remain large enough to appreciate and labels remain legible. The enlarged specimen view should fit within the viewport with sensible scrolling where necessary, and the magnifying interaction should remain usable on touch devices. Do not crop essential plant structures, labels, or mounting details.
+
+**Technical implementation:** Use SVG for procedural plant generation, with recursive branching or an L-system grammar that produces deterministic botanical structures from unique seeds. Generate branches, leaves, flowers, and seed pods as distinct SVG elements so they can animate independently. Use CSS gradients, SVG filters, and lightweight procedural noise for paper texture and ink effects. Implement smooth growth animations using stroke-dashoffset, with carefully timed leaf and flower reveals. Maintain consistent specimen identity across gallery, lightbox, and pressed states. Optimize rendering so six detailed specimens remain responsive without excessive DOM complexity or unnecessary recalculation. Respect reduced-motion preferences by providing an immediate or simplified reveal while preserving every essential interaction.
+
+**Overall experience:** Make **"Herbarium Imaginarium"** feel like opening a forgotten Victorian botanical cabinet filled with extraordinary plants from an imaginary world. Every specimen should tell a quiet story through its unusual morphology, invented scientific name, archival label, and delicate presentation. The experience should combine the elegance of antique scientific illustration with the wonder of procedural generation, allowing users to discover, collect, examine, and preserve fictional flora. Prioritize exquisite paper textures, believable botanical structures, sophisticated typography, authentic archival details, smooth specimen-growth animations, and polished tactile interactions. The finished result should feel less like a conventional digital gallery and more like a living nineteenth-century natural history collection — mysterious, scholarly, beautiful, and endlessly discoverable.
+</script>
+
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s), PI=Math.PI;
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches||/still/.test(location.hash);
+const f=n=>(Math.round(n*10)/10).toString();
+const rng=seed=>{let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}};
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- procedural paper textures (SVG turbulence as CSS images) ---------- */
+const svgUrl=s=>`url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+const root=document.documentElement.style;
+root.setProperty('--grainp',svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='260' height='260'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .36 0 0 0 0 .25 0 0 0 0 .11 0 0 0 .5 -.14'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`));
+root.setProperty('--fibre',svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.018 .55' numOctaves='2' seed='4' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .16 0 0 0 .9 -.5'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`));
+root.setProperty('--wood',svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='900' height='600'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.003 .22' numOctaves='3' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .04 0 0 0 0 .02 0 0 0 0 0 0 0 0 1.5 -.55'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`));
+
+/* ---------- geometry helpers ---------- */
+const cr=p=>{let d='';for(let i=0;i<p.length-1;i++){const a=p[i-1]||p[i],b=p[i],c=p[i+1],e=p[i+2]||c;
+  d+=`C${f(b[0]+(c[0]-a[0])/6)},${f(b[1]+(c[1]-a[1])/6)} ${f(c[0]-(e[0]-b[0])/6)},${f(c[1]-(e[1]-b[1])/6)} ${f(c[0])},${f(c[1])}`}return d};
+const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+function profile(type,t,i){
+  switch(type){
+    case'ovate':return Math.sin(PI*Math.pow(t,.6));
+    case'obovate':return Math.sin(PI*Math.pow(t,1.7));
+    case'lobed':return Math.sin(PI*Math.pow(t,.8))*(.58+.42*Math.abs(Math.cos(t*PI*3.5)));
+    case'crenate':return Math.sin(PI*Math.pow(t,.7))*(i%2?.84:1);
+    case'linear':return Math.sin(PI*Math.pow(t,.45))*.36;
+    case'orbicular':return Math.sqrt(Math.max(0,1-(2*t-1)**2))*1.25;
+    default:return Math.sin(PI*Math.pow(t,.85));
+  }
+}
+/* one leaf or petal: outline, midrib, veins, hatching */
+function lg(x,y,a,L,W,type,cv,veins){
+  const n=type==='lobed'?18:type==='crenate'?16:12,m=[],l=[],r=[];let px=x,py=y,an=a;
+  for(let i=0;i<=n;i++){const w=profile(type,i/n,i)*W*L,nx=-Math.sin(an),ny=Math.cos(an);
+    m.push([px,py]);l.push([px+nx*w,py+ny*w]);r.push([px-nx*w,py-ny*w]);an+=cv/n;px+=Math.cos(an)*L/n;py+=Math.sin(an)*L/n}
+  const o=`M${f(x)},${f(y)}${cr(l)}${cr(r.slice().reverse())}Z`;
+  let v=`M${f(x)},${f(y)}${cr(m)}`,h='';
+  if(veins){const st=n>12?3:2;
+    for(let i=2;i<n-1;i+=st){const p=m[i],q=mix(m[i],l[i+1],.82),s=mix(m[i],r[i+1],.82);
+      v+=`M${f(p[0])},${f(p[1])}L${f(q[0])},${f(q[1])}M${f(p[0])},${f(p[1])}L${f(s[0])},${f(s[1])}`}
+    if(L>13&&type!=='linear')for(let i=1;i<n-1;i++){const p=mix(m[i],r[i],.5),q=mix(m[i],r[i+1],.93);h+=`M${f(p[0])},${f(p[1])}L${f(q[0])},${f(q[1])}`}
+  }
+  return{o,v,h,tip:m[n]};
+}
+
+/* ---------- the L-system grammars ---------- */
+const pick=(R,a)=>a[(R()*a.length)|0];
+const HAB={
+  alternate:{ax:'FX',n:3,rule:{X:R=>pick(R,['Fl[+X]Fl[-X]X','Fl[-X]Fl[+X]X','Fl[+X]FlX','Fl[-X]lFX'])},term:{X:'o'}},
+  dichotomous:{ax:'FFX',n:4,rule:{X:R=>pick(R,['F[+X][-X]','Fl[+X][-X]','F[+X]l[-fX]','Fl[+fX][-X]'])},term:{X:'o'}},
+  sympodial:{ax:'FX',n:4,rule:{X:R=>pick(R,['Fl[+X]-FX','Fl[-X]+FX','F[+X]-FlX','F[-X]+FlX'])},term:{X:'o'}},
+  opposite:{ax:'FX',n:5,rule:{X:()=>'Fl[+Y][-Y]X',Y:R=>pick(R,['FlY','FlY','F[+o]lY'])},term:{X:'o',Y:'o'}},
+  raceme:{ax:'[L][L][L][L][L]FF(1.3)X',n:8,rule:{X:R=>pick(R,['F[+fY]X','F[-fY]X','f[+fY][-fY]X'])},term:{X:'o',Y:'o'}},
+  umbel:{ax:'FlF[+Y]FlF[-Y]F(1.2)U',n:2,rule:{
+    U:R=>{const k=5+(R()*4|0),sp=.9+R()*.4;let s='';for(let i=0;i<k;i++)s+=`[+(${((i/(k-1)-.5)*2*sp).toFixed(2)})F(1.3)u]`;return s},
+    u:R=>{const k=4+(R()*3|0);let s='';for(let i=0;i<k;i++)s+=`[+(${((i/(k-1)-.5)*1.6).toFixed(2)})fo]`;return s},
+    Y:()=>'FlY'},term:{Y:'l'}},
+  twining:{ax:'FX',n:9,rule:{X:R=>pick(R,['Fl[+t]X','Fl[-t]X','Fl[+fo]X','Fl[-fo]X','Fl[+t]X','Fl[+X]-X'])},term:{X:'t'}},
+  frondose:{ax:'[+(.78)Z][-(.7)Z][+(.36)fZ][-(.3)ffZ]fffZ',n:10,rule:{Z:()=>'f[+(1.25)p][-(1.25)p]Z'},term:{Z:R=>R()<.55?'c':'o'}},
+  verticillate:{ax:'FFX',n:5,rule:{X:()=>'F[+(1.15)Y][-(1.15)Y][+(.58)Y][-(.58)Y]X',Y:R=>R()<.3?'flY':'fY'},term:{X:'o',Y:'o'}}
+};
+function expand(h,R){
+  let s=h.ax;
+  for(let i=0;i<h.n;i++)s=s.replace(/[XYZUu]/g,c=>h.rule[c]?h.rule[c](R):c);
+  s=s.replace(/[XYZUu]/g,c=>{const t=h.term[c];return typeof t==='function'?t(R):(t||'')});
+  return[...s.matchAll(/([A-Za-z\[\]+\-])(?:\((-?[\d.]+)\))?/g)].map(m=>[m[1],m[2]===undefined?null:+m[2]]);
+}
+function turtle(tok,S,R){
+  const chains=[],organs=[],stack=[];
+  let st={x:0,y:0,a:-PI/2,d:0,w:1,n:0,side:R()<.5?1:-1,dist:0,ch:null,brk:true},maxD=0,maxN=0;
+  for(const[c,v]of tok){
+    if(c==='F'||c==='f'){
+      const L=(c==='f'?.46:1)*Math.pow(S.decay,st.d)*Math.pow(.97,st.n)*(.85+.3*R())*(v??1);
+      if(!st.ch||st.brk){st.ch={pts:[[st.x,st.y]],w:st.w,dist:st.dist,len:0};chains.push(st.ch);st.brk=false}
+      for(let i=0;i<3;i++){
+        st.a+=(R()-.5)*S.jit-S.trop*Math.cos(st.a)+S.wave*Math.sin(st.dist*S.wf+i);
+        st.x+=Math.cos(st.a)*L/3;st.y+=Math.sin(st.a)*L/3;st.ch.pts.push([st.x,st.y]);
+      }
+      st.dist+=L;st.ch.len+=L;st.w*=.93;st.n++;maxD=Math.max(maxD,st.dist);maxN=Math.max(maxN,st.n);
+    }else if(c==='+'||c==='-')st.a+=(c==='+'?1:-1)*(v??S.ang)*(.82+.36*R());
+    else if(c==='['){stack.push(st);st={...st,d:st.d+1,w:st.w*.62,ch:null,brk:true}}
+    else if(c===']'){st=stack.pop();st.brk=true}
+    else{st.side=-st.side;organs.push({c,x:st.x,y:st.y,a:st.a,d:st.d,n:st.n,dist:st.dist,side:st.side})}
+  }
+  return{chains,organs,maxD,maxN};
+}
+
+/* ---------- species traits ---------- */
+const HN=Object.keys(HAB),LT=['lanceolate','ovate','obovate','lobed','crenate','linear','orbicular'],
+  FT=['rosette','radiate','stellate','contorted','campanulate','lantern','globose','funnelform'],
+  GR=['#6b7f4e','#9aa77a','#7d8c5a','#8a9a6b','#5f7350','#a3a57a'],
+  PC=['#f4e8cc','#dcb8a2','#b98c8a','#8e4a44','#c9a55c','#b9a3ad','#e6d3a8'],MAD='#9c3b30';
+function genome(seed){
+  const R=rng(seed),r=(a,b)=>a+(b-a)*R(),ch=p=>R()<p,hn=pick(R,HN);
+  const S={hn,ang:r(.34,.6),jit:r(.05,.16),decay:r(.74,.88),trop:r(-.03,.1),wave:0,wf:r(1.2,2.4),sw:r(2.1,3.3),
+    leaf:pick(R,LT),leaf2:ch(.4)?pick(R,LT):null,comp:ch(.24)?pick(R,['pinnate','palmate']):null,opp:ch(.3),lang:r(.6,1.05),
+    ll:r(18,29),lw:r(.2,.38),lcv:r(-.55,.55),fl:pick(R,FT),pet:4+(R()*4|0),fc:pick(R,PC),pf:r(.45,.9),
+    fruit:pick(R,['berry','pod','berry','none']),tend:ch(.2),root:pick(R,['fibrous','bulb','tap','fibrous']),g1:pick(R,GR),g2:pick(R,GR),fs:r(9,13.5)};
+  if(hn==='twining'){S.wave=r(.1,.19);S.trop=.03;S.tend=true}
+  if(hn==='frondose'){S.trop=r(-.05,-.015);S.jit*=.5;S.leaf=pick(R,['lanceolate','linear','ovate','crenate']);S.comp=null;S.opp=false;S.root='fibrous'}
+  if(hn==='raceme'){S.jit*=.5;S.root=pick(R,['bulb','tap'])}
+  if(hn==='umbel')S.comp=S.comp||(ch(.5)?'pinnate':null);
+  if(S.hn==='opposite')S.opp=true;
+  return{S,R};
+}
+
+/* ---------- drawing a specimen ---------- */
+const VW=300,VH=390;
+function drawPlant(spec,opt={}){
+  const{S,R}=genome(spec.seed),r=(a,b)=>a+(b-a)*R(),ch=p=>R()<p;
+  const T=turtle(expand(HAB[S.hn],R),S,R),TT=opt.T||2.8,base=opt.delay||0;
+  let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const c of T.chains)for(const p of c.pts){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1])}
+  const pad=S.ll*.7+8,availH=VH-pad-48,bw=Math.max(x1-x0,.5),bh=Math.max(y1-y0,.5);
+  const sc=Math.min((VW-2*pad)/bw,availH/bh,92),ox=VW/2-(x0+x1)/2*sc,oy=VH-40-y1*sc-Math.max(0,availH-bh*sc)*.35;
+  const tr=p=>[ox+p[0]*sc,oy+p[1]*sc],dl=d=>(base+d/T.maxD*TT).toFixed(2);
+  const nLeaf=T.organs.filter(o=>o.c==='l'||o.c==='p').length,keep=Math.min(1,62/Math.max(nLeaf,1));
+  let stems='',hat='',leaves='',tops='',roots='';
+
+  /* stems: one tapered stroke per branch segment, timed by distance from the base */
+  T.chains.forEach(c=>{
+    const p=c.pts.map(tr),w=Math.max(.5,Math.min(S.sw*c.w,3.4));
+    stems+=`<path class="st" pathLength="1" d="M${f(p[0][0])},${f(p[0][1])}${cr(p)}" style="--d:${dl(c.dist)}s;--t:${Math.max(.14,c.len/T.maxD*TT).toFixed(2)}s;stroke-width:${w.toFixed(2)};stroke-opacity:${(.78+.22*R()).toFixed(2)}"/>`;
+    if(w>1.9)for(let i=1;i<p.length-1;i++){const dx=p[i+1][0]-p[i][0],dy=p[i+1][1]-p[i][1],q=Math.hypot(dx,dy)||1,nx=-dy/q,ny=dx/q;
+      for(let k=0;k<2;k++){const b=mix(p[i],p[i+1],k/2+.15);hat+=`M${f(b[0]+nx*w*.1)},${f(b[1]+ny*w*.1)}l${f(nx*w*.36+dx/q*.9)},${f(ny*w*.36+dy/q*.9)}`}}
+  });
+  c_base:{ /* roots, bulbs and taproots */
+    const b=tr([0,0]);let d='';
+    if(S.root==='bulb'){const w=r(7,10),h=r(10,14);
+      roots+=`<path class="pt-f" fill="#d8c59a" d="M${f(b[0])},${f(b[1]-2)}C${f(b[0]+w)},${f(b[1])} ${f(b[0]+w)},${f(b[1]+h)} ${f(b[0])},${f(b[1]+h)}C${f(b[0]-w)},${f(b[1]+h)} ${f(b[0]-w)},${f(b[1])} ${f(b[0])},${f(b[1]-2)}Z"/><path class="pt-o" d="M${f(b[0])},${f(b[1]-2)}C${f(b[0]+w)},${f(b[1])} ${f(b[0]+w)},${f(b[1]+h)} ${f(b[0])},${f(b[1]+h)}C${f(b[0]-w)},${f(b[1]+h)} ${f(b[0]-w)},${f(b[1])} ${f(b[0])},${f(b[1]-2)}Z"/><path class="pt-v" d="M${f(b[0])},${f(b[1])}C${f(b[0]+w*.5)},${f(b[1]+h*.3)} ${f(b[0]+w*.4)},${f(b[1]+h*.8)} ${f(b[0])},${f(b[1]+h)}M${f(b[0])},${f(b[1])}C${f(b[0]-w*.5)},${f(b[1]+h*.3)} ${f(b[0]-w*.4)},${f(b[1]+h*.8)} ${f(b[0])},${f(b[1]+h)}"/>`;
+      b[1]+=h;
+    }
+    const k=S.root==='tap'?3:5+(R()*3|0);
+    for(let i=0;i<k;i++){let x=b[0],y=b[1],a=PI/2+(i-(k-1)/2)*(S.root==='tap'?.22:.42)+r(-.12,.12),L=(S.root==='tap'&&i===1?r(20,26):r(9,17))/6;
+      d+=`M${f(x)},${f(y)}`;const pts=[[x,y]];for(let j=0;j<6;j++){a+=r(-.42,.42);x+=Math.cos(a)*L;y+=Math.sin(a)*L;pts.push([x,y])}d+=cr(pts)}
+    roots+=`<path class="st" d="${d}" style="stroke-width:.55;stroke-opacity:.72"/>`;
+  }
+
+  const leafEl=(x,y,a,L,type,col,d,cv)=>{const g=lg(x,y,a,L,type==='orbicular'?.4:S.lw*(type==='obovate'?1.15:1),type,cv,true);
+    return`<g class="lf" style="--d:${d}s"><path class="lf-f" fill="${col}" fill-opacity="${r(.75,1).toFixed(2)}" d="${g.o}"/><path class="lf-o" pathLength="1" d="${g.o}"/><path class="lf-v" d="${g.v}"/>${g.h?`<path class="lf-h" d="${g.h}"/>`:''}</g>`};
+  function leafAt(o,side,scale=1){
+    const P=tr([o.x,o.y]),a=o.a+side*S.lang*r(.85,1.15),two=S.leaf2&&o.n>=3,type=two?S.leaf2:S.leaf,col=two?S.g2:S.g1,d=dl(o.dist);
+    const L=S.ll*scale*Math.pow(.9,o.d)*Math.max(.55,1-o.n*.035)*r(.82,1.18),cv=S.lcv*side+r(-.2,.2);
+    if(S.comp==='pinnate'&&!two){
+      const pts=[P];let an=a,x=P[0],y=P[1],s='';const k=3+(R()*2|0),RL=L*1.25;
+      for(let i=1;i<=k;i++){an+=cv/k;x+=Math.cos(an)*RL/k;y+=Math.sin(an)*RL/k;pts.push([x,y]);
+        if(i<k)for(const sd of[1,-1])s+=leafEl(x,y,an+sd*1.05,L*.42,type==='lobed'?'ovate':type,col,d,sd*.3)}
+      return`<path class="st" pathLength="1" d="M${f(P[0])},${f(P[1])}${cr(pts)}" style="--d:${d}s;--t:.5s;stroke-width:.6"/>`+s+leafEl(x,y,an,L*.46,type==='lobed'?'ovate':type,col,d,0);
+    }
+    if(S.comp==='palmate'&&!two){let s='';const k=ch(.5)?3:5;for(let i=0;i<k;i++)s+=leafEl(P[0],P[1],a+(i-(k-1)/2)*.48,L*(1-Math.abs(i-(k-1)/2)*.17)*.85,'lanceolate',col,d,0);return s}
+    if(type==='orbicular'){const q=[P[0]+Math.cos(a)*L*.4,P[1]+Math.sin(a)*L*.4];
+      return`<path class="st" pathLength="1" d="M${f(P[0])},${f(P[1])}L${f(q[0])},${f(q[1])}" style="--d:${d}s;--t:.3s;stroke-width:.55"/>`+leafEl(q[0],q[1],a,L*.62,type,col,d,cv)}
+    return leafEl(P[0],P[1],a,L,type,col,d,cv);
+  }
+  function spiral(o,w,len){
+    const P=tr([o.x,o.y]),sg=o.side;let a=o.a+sg*.5,x=P[0],y=P[1],k=.07*sg,stp=len;const pts=[[x,y]];
+    for(let i=0;i<26;i++){a+=k;k*=1.118;stp*=.972;x+=Math.cos(a)*stp;y+=Math.sin(a)*stp;pts.push([x,y])}
+    return`<path class="st" pathLength="1" d="M${f(P[0])},${f(P[1])}${cr(pts)}" style="--d:${dl(o.dist)}s;--t:1.1s;stroke-width:${w};stroke-opacity:.85"/>`;
+  }
+  function berries(o){
+    const P=tr([o.x,o.y]),k=3+(R()*4|0);let ped='',cs='',hl='';
+    for(let i=0;i<k;i++){const an=o.a+o.side*(.9+i*.42)+r(-.2,.2),q=r(5,10),x=P[0]+Math.cos(an)*q,y=P[1]+Math.sin(an)*q+1.5,rad=r(2,3.1);
+      ped+=`M${f(P[0])},${f(P[1])}Q${f((P[0]+x)/2)},${f((P[1]+y)/2-2)} ${f(x)},${f(y-rad)}`;
+      cs+=`<circle class="bry" cx="${f(x)}" cy="${f(y)}" r="${f(rad)}" fill="${ch(.3)?'#7d3c3a':MAD}" fill-opacity=".88"/>`;
+      hl+=`M${f(x-rad*.5)},${f(y-rad*.2)}a${f(rad*.6)},${f(rad*.6)} 0 0 1 ${f(rad*.5)},${f(-rad*.4)}`}
+    return`<g class="fade" style="--d:${(+dl(o.dist)+.5).toFixed(2)}s"><path class="st" d="${ped}" style="stroke-width:.45"/>${cs}<path class="hl" d="${hl}"/></g>`;
+  }
+  function pod(o){
+    const P=tr([o.x,o.y]),a=o.a+o.side*.8,g=lg(P[0],P[1],a,r(15,21),.15,'lanceolate',o.side*.7,false);let seeds='';
+    const m=lg(P[0],P[1],a,17,.15,'lanceolate',o.side*.7,false);void m;
+    for(let t=.25;t<.85;t+=.17){const q=mix(P,g.tip,t);seeds+=`M${f(q[0]+1.2)},${f(q[1])}a1.2,1.2 0 1 0 -2.4,0a1.2,1.2 0 1 0 2.4,0`}
+    return`<g class="lf" style="--d:${dl(o.dist)}s"><path class="lf-f" fill="#b9a26a" d="${g.o}"/><path class="lf-o" pathLength="1" d="${g.o}"/><path class="lf-v" d="${g.v}${seeds}"/></g>`;
+  }
+  function wrap(o,body,rot,d){const P=tr([o.x,o.y]);
+    return`<g transform="translate(${f(P[0])} ${f(P[1])})${rot?` rotate(${f(o.a*180/PI+90)})`:''}"><g class="pop" style="--d:${(+dl(o.dist)+(d||.3)).toFixed(2)}s">${body}</g></g>`}
+  function bud(o){const k=r(.7,1.05);
+    return wrap(o,`<g transform="scale(${f(k)})"><path class="pt-f" fill="${S.g2}" d="M0,0C-3,-3 -2.6,-8 0,-11C2.6,-8 3,-3 0,0Z"/><path class="pt-o" d="M0,0C-3,-3 -2.6,-8 0,-11C2.6,-8 3,-3 0,0Z"/><path class="pt-v" d="M-1.5,-1.2Q-2.3,-4 -.9,-6.5M1.5,-1.2Q2.3,-4 .9,-6.5M0,-7.5V-10"/></g>`,true)}
+  function mini(o){let d='';for(let i=0;i<5;i++){const a=i*1.257+.3,x=Math.cos(a)*1.9,y=-2.2+Math.sin(a)*1.9;d+=`M${f(x+1.25)},${f(y)}a1.25,1.25 0 1 0 -2.5,0a1.25,1.25 0 1 0 2.5,0`}
+    return wrap(o,`<path class="pt-f" fill="${S.fc}" d="${d}"/><path class="pt-o" style="stroke-width:.4" d="${d}"/><circle cx="0" cy="-2.2" r=".85" fill="${MAD}"/>`,true)}
+  function flower(o){
+    const z=S.fs*Math.pow(.93,o.d)*r(.88,1.1),col=S.fc,sx=o.side*5,k=z/14;let b='';
+    const pet=(a,L,W,ty,cv)=>{const g=lg(0,0,a,L,W,ty,cv,false);return`<path class="pt-f" fill="${col}" d="${g.o}"/><path class="pt-o" d="${g.o}"/><path class="pt-v" d="${g.v}"/>`};
+    const centre=(rad,cy=0)=>{let d='';for(let i=0;i<6;i++){const a=i*1.05,q=rad*.55;d+=`M${f(Math.cos(a)*q+.35)},${f(cy+Math.sin(a)*q)}a.35,.35 0 1 0 -.7,0a.35,.35 0 1 0 .7,0`}
+      return`<circle class="ct" cx="0" cy="${f(cy)}" r="${f(rad)}" fill="${col==='#c9a55c'||ch(.6)?MAD:'#c9a55c'}"/><path class="dot" d="${d}"/>`};
+    switch(S.fl){
+      case'rosette':for(let i=0;i<S.pet;i++)b+=pet(-PI/2+i*2*PI/S.pet+r(-.08,.08),z,.36,'obovate',r(-.15,.15));
+        return wrap(o,`<g transform="scale(1 .82)">${b}</g>`+centre(z*.2),true);
+      case'radiate':{const n=12+(R()*5|0);for(let i=0;i<n;i++)b+=pet(-PI/2+i*2*PI/n+r(-.06,.06),z*1.05,.1,'linear',r(-.1,.1));
+        return wrap(o,`<g transform="scale(1 .8)">${b}</g>`+centre(z*.27),true)}
+      case'contorted':for(let i=0;i<S.pet+1;i++)b+=pet(-PI/2+i*2*PI/(S.pet+1),z,.34,'obovate',1.15);
+        return wrap(o,`<g transform="scale(1 .85)">${b}</g>`+centre(z*.15),true);
+      case'stellate':{const n=5+(R()*2|0);let fil='',an='';
+        for(let i=0;i<n*2;i++){const a=i*PI/n+.2,L=z*r(1.15,1.45),x=Math.cos(a)*L,y=Math.sin(a)*L*.85;fil+=`M0,0Q${f(x*.5+y*.12)},${f(y*.5-x*.12)} ${f(x)},${f(y)}`;an+=`<circle cx="${f(x)}" cy="${f(y)}" r=".95" fill="${MAD}"/>`}
+        for(let i=0;i<n;i++)b+=pet(-PI/2+i*2*PI/n,z*.95,.17,'lanceolate',0);
+        return wrap(o,`<g transform="scale(1 .85)">${b}</g><path class="pt-v" d="${fil}"/>${an}<circle class="ct" r="${f(z*.12)}" fill="#c9a55c"/>`,true)}
+      case'campanulate':{const p=`M${sx-3},1C${sx-5},6 ${sx-6},11 ${sx-8.5},15Q${sx-5.5},13.6 ${sx-4.2},16.4Q${sx-2},14 ${sx},17Q${sx+2},14 ${sx+4.2},16.4Q${sx+5.5},13.6 ${sx+8.5},15C${sx+6},11 ${sx+5},6 ${sx+3},1Z`;
+        return wrap(o,`<g transform="scale(${f(k)})"><path class="st" style="stroke-width:.6" d="M0,0C${sx*.3},-5 ${sx},-5 ${sx},1"/><path class="pt-f" fill="${col}" d="${p}"/><path class="pt-o" d="${p}"/><path class="pt-v" d="M${sx},2V13M${sx-2},3Q${sx-3.5},8 ${sx-4.6},13M${sx+2},3Q${sx+3.5},8 ${sx+4.6},13M${sx-3.8},1.8Q${sx},-1.6 ${sx+3.8},1.8M${sx},15V19.5"/><circle cx="${sx}" cy="20" r="1" fill="${MAD}"/></g>`,false)}
+      case'lantern':{const p=`M${sx},1C${sx+10},3 ${sx+9},17 ${sx},23C${sx-9},17 ${sx-10},3 ${sx},1Z`;
+        return wrap(o,`<g transform="scale(${f(k)})"><path class="st" style="stroke-width:.6" d="M0,0C${sx*.3},-5 ${sx},-5 ${sx},1"/><path class="pt-f" fill="${col}" d="${p}"/><path class="pt-o" d="${p}"/><path class="pt-v" d="M${sx},1V23M${sx},1C${sx+4.5},7 ${sx+4.5},16 ${sx},23M${sx},1C${sx-4.5},7 ${sx-4.5},16 ${sx},23"/><path class="lf-h" d="M${sx+5},6l2.2,1M${sx+5.6},9l2.2,1M${sx+5.6},12l2,1M${sx+5},15l1.6,1"/></g>`,false)}
+      case'globose':{const rad=z*.62;let ray='',dots='';
+        for(let i=0;i<18;i++){const a=i*.349+r(-.05,.05),L=rad*r(.8,1.05),x=Math.cos(a)*L,y=-rad+Math.sin(a)*L;ray+=`M0,${f(-rad)}L${f(x)},${f(y)}`;dots+=`M${f(x+.95)},${f(y)}a.95,.95 0 1 0 -1.9,0a.95,.95 0 1 0 1.9,0`}
+        for(let i=0;i<8;i++){const a=i*.785+.2,x=Math.cos(a)*rad*.5,y=-rad+Math.sin(a)*rad*.5;dots+=`M${f(x+.8)},${f(y)}a.8,.8 0 1 0 -1.6,0a.8,.8 0 1 0 1.6,0`}
+        return wrap(o,`<path class="pt-v" d="${ray}"/><path class="pt-f" fill="${col}" d="${dots}"/><path class="pt-o" style="stroke-width:.35" d="${dots}"/>`,true)}
+      default:{const p='M-2,0C-3,-6 -6,-10 -9.5,-13Q-4.5,-16.5 0,-13.5Q4.5,-16.5 9.5,-13C6,-10 3,-6 2,0Z';
+        return wrap(o,`<g transform="scale(${f(k)})"><path class="pt-f" fill="${col}" d="${p}"/><path class="pt-o" d="${p}"/><path class="pt-v" d="M0,-1V-12M-1.2,-2Q-3,-8 -5.5,-12M1.2,-2Q3,-8 5.5,-12M-1,-13L-2.4,-18M1,-13L2.4,-18M0,-13.5V-19"/><circle cx="-2.5" cy="-18.5" r=".9" fill="${MAD}"/><circle cx="2.5" cy="-18.5" r=".9" fill="${MAD}"/><circle cx="0" cy="-19.6" r=".9" fill="${MAD}"/></g>`,true)}
+    }
+  }
+
+  let basal=0;
+  for(const o of T.organs){
+    if(o.c==='l'){
+      if(R()>keep)continue;
+      leaves+=leafAt(o,o.side);if(S.opp)leaves+=leafAt(o,-o.side);
+      if(S.fruit==='berry'&&ch(.13))tops+=berries(o);else if(S.fruit==='pod'&&ch(.1))tops+=pod(o);
+    }else if(o.c==='p'){
+      if(R()>keep)continue;const P=tr([o.x,o.y]),L=S.ll*.78*Math.max(.22,1-o.n/11.5);
+      leaves+=leafEl(P[0],P[1],o.a,L,S.leaf,S.g1,dl(o.dist),r(-.25,.25));
+    }else if(o.c==='L'){
+      const P=tr([o.x,o.y]),i=basal++,a=-PI/2+(i-2)*.6+r(-.12,.12);
+      leaves+=leafEl(P[0],P[1],a,S.ll*r(1.5,1.95),S.leaf,S.g1,(base+.1+i*.12).toFixed(2),(i-2)*.32);
+    }else if(o.c==='t')tops+=S.tend?spiral(o,.6,2.3*r(.85,1.2)):leafAt(o,o.side);
+    else if(o.c==='c')tops+=spiral(o,1.15,1.9);
+    else if(o.c==='o'){
+      const small=(S.hn==='umbel'&&o.d>=2)||o.d>=4;
+      const open=S.hn==='raceme'?(o.d>0&&o.n<T.maxN*.62):ch(S.pf);
+      if(small)tops+=open||S.hn==='umbel'?mini(o):berries(o);
+      else if(open)tops+=flower(o);
+      else if(S.fruit!=='none'&&ch(.45))tops+=S.fruit==='berry'?berries(o):pod(o);
+      else tops+=bud(o);
+    }
+  }
+
+  /* mounting tape across the lower stem and, sometimes, a branch */
+  let tapes='';
+  const tape=(c,t)=>{const p=c.pts.map(tr),i=Math.max(1,Math.min(p.length-2,Math.round(t*(p.length-1)))),a=Math.atan2(p[i+1][1]-p[i-1][1],p[i+1][0]-p[i-1][0])*180/PI+90+r(-9,9),
+    w=r(17,23),h=r(4,5.2),z=()=>r(-.7,.7);
+    const d=`M${f(-w)},${f(-h)}L${f(w)},${f(-h+z())}L${f(w-1.3)},${f(-h*.4)}L${f(w+.4)},${f(0)}L${f(w-1.1)},${f(h*.5)}L${f(w)},${f(h)}L${f(-w)},${f(h+z())}L${f(-w+1.2)},${f(h*.4)}L${f(-w-.4)},0L${f(-w+1.1)},${f(-h*.5)}Z`;
+    tapes+=`<g transform="translate(${f(p[i][0])} ${f(p[i][1])}) rotate(${f(a)})"><g class="tape"><path class="tp-s" d="${d}" transform="translate(.7 1.3)"/><path class="tp" d="${d}"/><path class="tp-d" d="M${f(-w)},${f(-h)}H${f(-w*.55)}V${f(h)}H${f(-w)}ZM${f(w*.62)},${f(-h)}H${f(w)}V${f(h)}H${f(w*.62)}Z"/><path class="tp-l" d="M${f(-w+2.5)},${f(-h+1.3)}H${f(w-2.5)}"/></g></g>`};
+  const main=T.chains[S.hn==='frondose'?0:0];tape(main,S.hn==='raceme'?.75:.5);
+  const side=T.chains.filter(c=>c!==main&&c.len*sc>26);
+  if(side.length&&ch(.6))tape(side[(R()*Math.min(side.length,4))|0],.55);
+
+  /* a handwritten margin note in the emptier upper corner */
+    const m=meta(spec),left=true,nx=left?16:VW-16,rot=r(-5,5).toFixed(1);
+  let note=`<text class="note" x="${nx}" y="34" text-anchor="${left?'start':'end'}" transform="rotate(${rot} ${nx} 34)">${esc(m.note)}</text>`;
+  if(m.red)note+=`<text class="note red" x="${VW-nx}" y="${f(r(350,368))}" text-anchor="${left?'end':'start'}" transform="rotate(${(-rot)} ${VW-nx} 360)">${esc(m.red)}</text>`;
+
+  return`<svg class="pl${opt.grow?' grow':''}" viewBox="0 0 ${VW} ${VH}" role="img" aria-label="Ink drawing of ${esc(m.name)}"><g class="plant"><g filter="url(#ink)"><g class="fade" style="--d:${base.toFixed(2)}s">${roots}</g>${stems}<path class="ht fade" style="--d:${(base+TT*.6).toFixed(2)}s" d="${hat}"/>${leaves}${tops}</g></g>${tapes}${note}</svg>`;
+}
+
+/* ---------- invented taxonomy and labels ---------- */
+const G1=['Umbr','Noct','Vesper','Nebul','Somn','Crepusc','Thren','Mirab','Cael','Fabul','Phantasm','Lucifer','Elys','Hesper','Calig','Oneir','Tenebr','Glaci','Pluvi','Susurr','Lacrim','Obscur','Silent','Vagant'],
+  G2=['av','ell','in','ol','id','or','ul','isc','andr','ic'],
+  GE=[['ia','a'],['a','a'],['ella','a'],['aria','a'],['um','um'],['ium','um'],['anthus','us'],['ina','a'],['ora','a'],['astrum','um'],['ula','a']],
+  E1=['noct','lun','umbr','nebul','somn','vesper','pall','tenu','crisp','argent','fumos','mirabil','occult','silv','pluvi','glauc','auror','tacit','vag','serot','pruin','lacrim','err','frigid'],
+  E2=[['iflor',1],['ifoli',1],['at',1],['os',1],['ulat',1],['in',1],['ell',1],['ic',1],['escens',0],['oides',0],['icola',0]],
+  REAL=/^(Lunaria|Aurinia|Astrantia|Glaciella|Pluviola)$/,
+  MON=['January','February','March','April','May','June','July','August','September','October','November','December'],
+  HAB_W=['Along the','Shaded banks of the','Wet meadows near','Limestone ledges above','In moss beside','Hedgerows of','Among stones at','Tidal margins of'],
+  PLACE=['Vale of Ashenbrook','Northern Mistwood','Glasswater Fen','Harrowmere','Isle of Quill','Thistledown Reach','Saint Orrin’s Wood','Lanternmoor','Emberwick Downs','Hollow of Veil','Greywether Sound','Marrowby Cleft'],
+  NOTES=['petals close at dusk','scent faint, of rain','seed rattles when dry','found only after frost','leaves cold to the touch','roots luminous (?)','second sheet lost','opens to moonlight','bees avoid it','juice stains violet','grows toward sound (?)','one plant only seen','sheds leaves when moved','taken from the north face'],
+  REDS=['sp. nov. ?','vid. !','type','cf. No. 0019','dupl. sent','!'],
+  DESC={alternate:'alternate, ascending',dichotomous:'dichotomous',sympodial:'sympodial, in zigzag',opposite:'opposite, decussate',raceme:'scapose raceme',umbel:'compound umbel',twining:'twining, with tendrils',frondose:'frondose',verticillate:'verticillate, in tiers',
+    rosette:'rotate corolla',radiate:'radiate head',stellate:'stellate, stamens long-exserted',contorted:'contorted corolla',campanulate:'campanulate, nodding',lantern:'inflated calyx',globose:'globose head',funnelform:'funnelform',
+    berry:'berries, madder red',pod:'slender pods',none:'not seen',fibrous:'fibrous',bulb:'tunicate bulb',tap:'taproot'};
+const metaCache=new Map();
+function meta(spec){
+  if(metaCache.has(spec.seed))return metaCache.get(spec.seed);
+  const R=rng(spec.seed^0x9e3779b9),pk=a=>pick(R,a);let genus,end;
+  do{end=pk(GE);genus=pk(G1)+(R()<.7?pk(G2):'')+end[0]}while(REAL.test(genus));
+  genus=genus.replace(/([aeiou])\1+/g,'$1');
+  const e=pk(E2),ep=(pk(E1)+e[0]+(e[1]?end[1]:'')).replace(/ii/g,'i');
+  const{S}=genome(spec.seed);
+  const m={name:`${genus} ${ep}`,genus,date:`${1+(R()*28|0)} ${pk(MON)} ${1838+(R()*58|0)}`,place:`${pk(HAB_W)} ${pk(PLACE)}`,note:pk(NOTES),red:R()<.5?pk(REDS):'',
+    ord:genus.replace(/(ia|a|um|ium|us|ella|aria|ina|ora|astrum|ula)$/,'')+'aceae',no:String(spec.no).padStart(4,'0'),S};
+  metaCache.set(spec.seed,m);return m;
+}
+const stampSvg=`<svg class="stamp" viewBox="0 0 80 80" aria-hidden="true"><defs><path id="sp" d="M40,40m-27,0a27,27 0 1,1 54,0a27,27 0 1,1 -54,0"/></defs><circle cx="40" cy="40" r="37" stroke-width="1.6"/><circle cx="40" cy="40" r="33.5" stroke-width=".6"/><circle cx="40" cy="40" r="17" stroke-width=".6"/><text><textPath href="#sp">EX HERB · IMAGINARIUM · MDCCCLXXVI ·</textPath></text><text x="40" y="44" text-anchor="middle" style="font-size:11px;letter-spacing:.05em">H·I</text></svg>`;
+const labelHtml=m=>`<div class="lab"><div class="lab-h">Herb. Imaginarium</div><div class="lab-n">${esc(m.name)}</div><div class="lab-l">${esc(m.place)}</div><div class="lab-d">Collected ${m.date}</div><div class="lab-f"><span>Specimen No. ${m.no}</span><span>Ord. ${esc(m.ord)}</span></div></div>`;
+
+function paperStyle(el,seed){
+  const R=rng(seed^0x51ed27),r=(a,b)=>a+(b-a)*R();let fox=[],pts=[];
+  for(let i=0,n=8+(R()*8|0);i<n;i++)fox.push(`radial-gradient(ellipse ${r(.6,3.2).toFixed(1)}% ${r(.5,2.4).toFixed(1)}% at ${r(3,97).toFixed(1)}% ${r(3,97).toFixed(1)}%,rgba(${138+(R()*30|0)},${92+(R()*20|0)},48,${r(.14,.34).toFixed(2)}),rgba(140,95,50,0))`);
+  fox.push(`radial-gradient(ellipse ${r(14,26).toFixed(0)}% ${r(9,18).toFixed(0)}% at ${r(0,100).toFixed(0)}% ${r(0,100).toFixed(0)}%,rgba(150,108,52,.16),rgba(150,108,52,0))`);
+  el.style.setProperty('--fox',fox.join(','));
+  if(R()<.6){const a=r(96,112).toFixed(0),p=r(30,70);el.style.setProperty('--crease',`linear-gradient(${a}deg,transparent ${(p-.25).toFixed(2)}%,rgba(90,60,30,.13) ${p.toFixed(2)}%,rgba(255,251,238,.26) ${(p+.2).toFixed(2)}%,transparent ${(p+.5).toFixed(2)}%)`)}
+  const N=16,j=()=>r(0,.55).toFixed(2);
+  for(let i=0;i<=N;i++)pts.push(`${(i/N*100).toFixed(1)}% ${j()}%`);
+  for(let i=1;i<=N;i++)pts.push(`${(100-j()).toFixed(2)}% ${(i/N*100).toFixed(1)}%`);
+  for(let i=N-1;i>=0;i--)pts.push(`${(i/N*100).toFixed(1)}% ${(100-j()).toFixed(2)}%`);
+  for(let i=N-1;i>0;i--)pts.push(`${j()}% ${(i/N*100).toFixed(1)}%`);
+  el.style.setProperty('--deckle',`polygon(${pts.join(',')})`);
+  return R;
+}
+
+/* ---------- the collection ---------- */
+const KEY='herbarium-imaginarium-v1',FIRST=[190438,3185,2000,1037,4037,1000];
+let state={list:FIRST.map((seed,i)=>({seed,no:37+i,pressed:false})),next:43};
+const hs=/seed=([\d,]+)/.exec(location.hash);
+if(hs)state.list=hs[1].split(',').slice(0,6).map((v,i)=>({seed:+v,no:37+i,pressed:false}));
+else try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.list)&&s.list.length===6&&s.list.every(x=>Number.isFinite(x.seed)&&Number.isFinite(x.no)))state=s}catch(e){}
+const save=()=>{if(hs)return;try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+const tray=$('#tray'),live=$('#live');
+
+function fillCard(card,spec,opt){
+  const m=meta(spec),R=rng(spec.seed^77);
+  card.style.setProperty('--rot',((R()-.5)*1.7).toFixed(2)+'deg');
+  card.innerHTML=`<button type="button" class="sheet${opt.grow?' fresh':''}${spec.pressed?' pressed':''}" aria-label="Examine specimen No. ${m.no}, ${esc(m.name)}"><span class="illus" style="display:block">${drawPlant(spec,opt)}</span>${labelHtml(m).replace(/div/g,'span').replace(/class="lab([^"]*)"/g,'class="lab$1" style="display:block"')}${stampSvg}<span class="tab" aria-hidden="true">Examine</span></button>`;
+  const sheet=card.firstChild;paperStyle(sheet,spec.seed);
+  sheet.style.setProperty('--srot',(-18+R()*30).toFixed(0)+'deg');
+  sheet.querySelector('.lab-f').style.display='flex';
+  sheet.addEventListener('click',()=>openLb(spec,sheet));
+  if(opt.grow){const done=((opt.delay||0)+(opt.T||2.8)+1.5)*1000;
+    setTimeout(()=>sheet.classList.remove('fresh'),done-900);
+    setTimeout(()=>{const s=sheet.querySelector('.pl');s&&s.classList.remove('grow')},done+1600)}
+}
+state.list.forEach((spec,i)=>{const c=document.createElement('article');c.className='card';tray.appendChild(c);fillCard(c,spec,reduce?{}:{grow:true,T:2,delay:.25+i*.45})});
+
+let busy=false;
+$('#collect').addEventListener('click',()=>{
+  if(busy)return;busy=true;const btn=$('#collect');btn.disabled=true;
+  let idx=0;state.list.forEach((s,i)=>{if(s.no<state.list[idx].no)idx=i});
+  const spec={seed:(Math.random()*2147483647)|0,no:state.next++,pressed:false},card=tray.children[idx],m=meta(spec);
+  state.list[idx]=spec;save();
+  card.classList.add('leaving');card.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});
+  setTimeout(()=>{
+    fillCard(card,spec,reduce?{}:{grow:true,T:3.2,delay:.7});
+    card.classList.remove('leaving');card.classList.add('arriving');
+    live.textContent=`Collected specimen No. ${m.no}, ${m.name}, ${m.date}.`;
+    setTimeout(()=>{card.classList.remove('arriving');busy=false;btn.disabled=false},reduce?50:1900);
+  },reduce?0:520);
+});
+
+/* ---------- examination lightbox, loupe and press ---------- */
+const lb=$('#lb'),lbSheet=$('#lbSheet');let cur=null,from=null,loupeOn=matchMedia('(hover:hover) and (pointer:fine)').matches,raf=0;
+function openLb(spec,src){
+  cur=spec;from=src;const m=meta(spec),S=m.S;
+  lbSheet.className='sheet lb-sheet'+(spec.pressed?' pressed':'');paperStyle(lbSheet,spec.seed);lbSheet.style.clipPath='none';
+  lbSheet.innerHTML=`<div class="illus${loupeOn?'':' noloupe'}" id="lbIllus">${drawPlant(spec)}<div class="blot"></div>
+    <div class="loupe" id="loupe" aria-hidden="true"><div class="loupe-h"></div><div class="glass"><div class="lw lw1"></div><div class="lw lw2"></div></div></div></div>
+  <div class="lb-side">${labelHtml(m)}
+    <dl class="det"><dt>Habit</dt><dd>${DESC[S.hn]}</dd><dt>Leaves</dt><dd>${S.comp?S.comp+', leaflets ':''}${S.leaf}${S.leaf2?'; upper leaves '+S.leaf2:''}</dd><dt>Flower</dt><dd>${DESC[S.fl]}</dd><dt>Fruit</dt><dd>${DESC[S.fruit]}</dd><dt>Root</dt><dd>${DESC[S.root]}</dd><dt>Note</dt><dd>${esc(m.note)}</dd></dl>
+    ${stampSvg}
+    <p class="hint" id="hint"></p>
+    <div class="ctl"><button type="button" class="ptab" id="bLoupe" aria-pressed="${loupeOn}">Loupe</button><button type="button" class="ptab" id="bPress" aria-pressed="${!!spec.pressed}">${spec.pressed?'Restore':'Press'}</button><button type="button" class="ptab" id="bClose">Close</button></div>
+  </div>`;
+  const illus=$('#lbIllus'),loupe=$('#loupe'),svg=illus.querySelector('.pl');
+  loupe.querySelectorAll('.lw').forEach(w=>{const c=svg.cloneNode(true);c.removeAttribute('role');c.setAttribute('aria-hidden','true');w.appendChild(c)});
+  const hint=()=>$('#hint').textContent=loupeOn?'Move over the sheet to inspect it. Arrow keys also move the loupe.':'Turn on the loupe to magnify the drawing.';hint();
+  let tx=0,ty=0,cx=0,cy=0,lx=0,ly=0,has=false,touch=false;
+  const place=()=>{
+    const w=illus.clientWidth,h=illus.clientHeight,D=Math.max(112,Math.min(190,w*.34));loupe.style.setProperty('--D',D+'px');
+    cx+=(tx-cx)*.28;cy+=(ty-cy)*.28;
+    const gx=Math.max(D*.5,Math.min(w-D*.5,cx)),gy=Math.max(D*.5,Math.min(h-D*.5,cy-(touch?D*.62:0)));
+    lx=gx;ly=gy;loupe.style.transform=`translate(${gx-D/2}px,${gy-D/2}px)`;
+    loupe.querySelectorAll('.lw svg').forEach((s,i)=>{const z=i?2.5:2.2;s.style.width=w*z+'px';s.style.height=h*z+'px';s.style.transform=`translate(${D/2-cx*z}px,${D/2-cy*z}px)`});
+    if(Math.abs(tx-cx)+Math.abs(ty-cy)>.2)raf=requestAnimationFrame(place);else raf=0;
+  };
+  const go=()=>{if(!raf)raf=requestAnimationFrame(place)};
+  const at=e=>{const b=illus.getBoundingClientRect();tx=Math.max(0,Math.min(b.width,e.clientX-b.left));ty=Math.max(0,Math.min(b.height,e.clientY-b.top));
+    touch=e.pointerType!=='mouse';if(!has){cx=tx;cy=ty;has=true}loupe.classList.add('on');go()};
+  illus.addEventListener('pointermove',e=>{if(loupeOn&&(e.pointerType==='mouse'||e.buttons))at(e)});
+  illus.addEventListener('pointerdown',e=>{if(loupeOn){at(e);if(e.pointerType!=='mouse')illus.setPointerCapture(e.pointerId)}});
+  illus.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')loupe.classList.remove('on')});
+  $('#bLoupe').addEventListener('click',e=>{loupeOn=!loupeOn;e.currentTarget.setAttribute('aria-pressed',loupeOn);illus.classList.toggle('noloupe',!loupeOn);hint();
+    if(loupeOn){tx=illus.clientWidth/2;ty=illus.clientHeight*.4;if(!has){cx=tx;cy=ty;has=true}touch=false;loupe.classList.add('on');go()}else loupe.classList.remove('on')});
+  lbSheet.onkeydown=e=>{const k={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key];if(!k||!loupeOn)return;e.preventDefault();
+    if(!has){cx=tx=illus.clientWidth/2;cy=ty=illus.clientHeight/2;has=true}
+    tx=Math.max(0,Math.min(illus.clientWidth,tx+k[0]*22));ty=Math.max(0,Math.min(illus.clientHeight,ty+k[1]*22));touch=false;loupe.classList.add('on');go()};
+  $('#bPress').addEventListener('click',e=>{
+    spec.pressed=!spec.pressed;save();e.currentTarget.textContent=spec.pressed?'Restore':'Press';e.currentTarget.setAttribute('aria-pressed',spec.pressed);
+    lbSheet.classList.remove('pressing');void lbSheet.offsetWidth;if(spec.pressed)lbSheet.classList.add('pressing');
+    setTimeout(()=>{lbSheet.classList.toggle('pressed',spec.pressed);from&&from.classList.toggle('pressed',spec.pressed)},spec.pressed&&!reduce?380:0);
+    live.textContent=spec.pressed?`${m.name} pressed.`:`${m.name} restored.`;
+  });
+  $('#bClose').addEventListener('click',closeLb);
+  lb.classList.add('on');lb.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';lb.scrollTop=0;
+  setTimeout(()=>$('#bClose')&&$('#bClose').focus({preventScroll:true}),60);
+}
+function closeLb(){
+  if(!cur)return;lb.classList.remove('on');lb.setAttribute('aria-hidden','true');document.body.style.overflow='';cancelAnimationFrame(raf);raf=0;
+  if(from&&from.isConnected)from.focus({preventScroll:true});cur=null;
+}
+lb.addEventListener('click',e=>{if(e.target===lb)closeLb()});
+lb.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const els=lb.querySelectorAll('button');if(!els.length)return;
+  const a=els[0],z=els[els.length-1];if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}});
+
+/* ---------- the prompt sheet ---------- */
+const brief=$('#brief');
+$('#briefBody').innerHTML=$('#promptSrc').textContent.trim().split(/\n\s*\n/).map(p=>'<p>'+esc(p).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>')+'</p>').join('');
+const setBrief=on=>{brief.classList.toggle('on',on);brief.setAttribute('aria-hidden',!on);document.body.style.overflow=on?'hidden':'';(on?$('#briefClose'):$('#briefBtn')).focus({preventScroll:true})};
+$('#briefBtn').addEventListener('click',()=>setBrief(true));
+$('#briefClose').addEventListener('click',()=>setBrief(false));
+brief.addEventListener('click',e=>{if(e.target===brief)setBrief(false)});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(brief.classList.contains('on'))setBrief(false);else closeLb()});
+
+/* deep links used for previews: #examine, #pressed, #prompt */
+const hash=location.hash;
+if(/examine|pressed|loupe/.test(hash))setTimeout(()=>{if(/pressed/.test(hash))state.list[0].pressed=true;tray.querySelector('.sheet').click();if(/loupe/.test(hash))$('#bLoupe').click()},50);
+if(/prompt/.test(hash))setBrief(true);
+})();
+</script>
+</body>
+</html>

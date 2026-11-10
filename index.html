@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three prompts, three pages</title>
+<meta name="description" content="Three interactive pages, each built by Claude Fable 5.2 from one prompt as a single HTML file.">
+<style>
+:root{--bg:#f4efe6;--ink:#211c16;--mute:#6d6458;--line:#d8cfc0;--card:#fbf8f2}
+@media (prefers-color-scheme:dark){:root{--bg:#16130f;--ink:#efe8db;--mute:#a59a8a;--line:#332c24;--card:#1e1a15}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:1.05rem/1.6 "Iowan Old Style",Palatino,"P052",Georgia,serif}
+main{max-width:1080px;margin:0 auto;padding:clamp(28px,7vw,88px) 16px 64px}
+h1{margin:0;font-weight:400;font-size:clamp(2rem,6vw,3.6rem);line-height:1.05;letter-spacing:-.01em}
+.lede{max-width:40em;margin:1.1em 0 2.6em;color:var(--mute);font-size:1.12rem}
+.grid{display:grid;gap:clamp(18px,3vw,32px);grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+a.card{display:flex;flex-direction:column;color:inherit;text-decoration:none;background:var(--card);border:1px solid var(--line);transition:transform .35s ease,box-shadow .35s ease}
+a.card:hover,a.card:focus-visible{transform:translateY(-4px);box-shadow:0 18px 34px rgba(0,0,0,.18)}
+a.card:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.card img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:#222;border-bottom:1px solid var(--line)}
+.card div{padding:18px 20px 22px;display:flex;flex-direction:column;gap:.4em;flex:1}
+.card h2{margin:0;font-weight:400;font-size:1.5rem;line-height:1.15}
+.card p{margin:0;color:var(--mute);font-size:.98rem}
+.card span{margin-top:auto;padding-top:.9em;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase}
+footer{margin-top:3em;padding-top:1.2em;border-top:1px solid var(--line);color:var(--mute);font-size:.95rem;max-width:44em}
+</style>
+</head>
+<body>
+<main>
+  <h1>Three prompts, three pages</h1>
+  <p class="lede">Each page below was built by Claude Fable 5.2 from one prompt. Each is a single HTML file with its CSS and JavaScript inline, no images and no build step. The full prompt is on every page, so you can compare what was asked with what came back.</p>
+  <div class="grid">
+    <a class="card" href="the-last-connection.html">
+      <img src="shots/the-last-connection.jpg" alt="A black rotary telephone on a desk beside a lamp, a rainy window behind it" loading="lazy">
+      <div><h2>The Last Connection</h2><p>A 1939 rotary telephone. Lift the receiver, pick a number from the directory and drag the dial round to the stop. Pull it part of the way and it sends fewer pulses, like the real mechanism. Every sound is synthesised in the browser.</p><span>Open the office</span></div>
+    </a>
+    <a class="card" href="foxglove-hollow.html">
+      <img src="shots/foxglove-hollow.jpg" alt="A paper-cut forest with mountains, pines, a river, a cottage and a small orange fox" loading="lazy">
+      <div><h2>Foxglove Hollow</h2><p>A paper-cut forest in a shadow box, nine sheets deep. Move the pointer to look around inside it, press the fox to make it hop, and slide the switch for night. On a tall screen the scene is cut again to fit.</p><span>Open the box</span></div>
+    </a>
+    <a class="card" href="herbarium-imaginarium.html">
+      <img src="shots/herbarium-imaginarium.jpg" alt="Six aged herbarium sheets with ink drawings of invented plants" loading="lazy">
+      <div><h2>Herbarium Imaginarium</h2><p>A Victorian cabinet of plants that never existed. Each one is grown by an L-system from a numeric seed and drawn stroke by stroke. Collect a new specimen, examine it under a brass loupe, or press it flat.</p><span>Open the cabinet</span></div>
+    </a>
+  </div>
+  <footer>Best on a desktop with sound on for the telephone. All three also work on a phone and with a keyboard.</footer>
+</main>
+</body>
+</html>
